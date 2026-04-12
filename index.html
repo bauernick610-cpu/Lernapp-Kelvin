@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Artemis II - Kelvin-Lernpfad - Physik Klasse 8</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#060d1f;min-height:100vh;color:#e2e8f0}
+.screen{display:none;min-height:100vh}.screen.active{display:block}
+
+/* Stars */
+.star{position:fixed;background:#fff;border-radius:50%;animation:twinkle 3s infinite;pointer-events:none;z-index:0}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.85}}
+
+/* ── MAP ── */
+#map-screen{background:#060d1f}
+.map-header{background:#0B3D91;padding:20px 20px 24px;text-align:center;position:relative;z-index:1}
+.live-pill{background:#FC3D21;color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:1px;display:inline-block;margin-bottom:10px}
+.map-header h1{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.map-header p{font-size:12px;color:#93c5fd}
+.map-body{position:relative;z-index:1;padding:20px;max-width:440px;margin:0 auto}
+.path-svg{width:100%;display:block;margin-bottom:12px}
+.snode{cursor:pointer}.snode.locked{cursor:default}
+.legend{display:flex;gap:14px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#64748b}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── CARDS ── */
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;position:relative;z-index:1}
+.card-label{font-size:11px;font-weight:600;color:#64748b;letter-spacing:.7px;text-transform:uppercase;margin-bottom:8px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;color:#64748b;font-weight:600;padding:5px 8px;border-bottom:1px solid #334155;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.data-table td{padding:6px 8px;color:#e2e8f0;border-bottom:1px solid #1e293b}
+.data-table tr:last-child td{border-bottom:none}
+.data-table td:last-child{color:#93c5fd;font-weight:600}
+
+/* ── STATION SCREEN ── */
+#station-screen{background:#0f172a}
+.stn-header{background:#0B3D91;padding:14px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.back-btn{background:rgba(255,255,255,.18);border:none;color:#fff;width:34px;height:34px;border-radius:8px;font-size:18px;cursor:pointer;flex-shrink:0;line-height:34px;text-align:center}
+.back-btn:hover{background:rgba(255,255,255,.28)}
+.stn-info{flex:1;min-width:0}
+.stn-info h2{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stn-info p{font-size:11px;color:#93c5fd}
+.stn-badge{background:#FC3D21;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.stn-body{padding:16px 18px;max-width:500px;margin:0 auto;padding-bottom:40px}
+
+/* ── BLOCK CARDS ── */
+.block-card{border-radius:14px;margin-bottom:12px;overflow:hidden;border:1px solid #334155}
+.block-header{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.block-header.locked-hdr{cursor:default}
+.block-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.block-title{flex:1}
+.block-title h3{font-size:14px;font-weight:600;line-height:1.3}
+.block-title p{font-size:11px;margin-top:1px}
+.block-status{font-size:18px;flex-shrink:0}
+.block-body{background:#1e293b;padding:16px;border-top:1px solid #334155;display:none}
+.block-body.open{display:block}
+
+/* Pflicht block */
+.blk-p .block-header{background:#1e3a5f}
+.blk-p .block-icon{background:#1d4ed8;color:#fff}
+.blk-p .block-title h3{color:#93c5fd}
+.blk-p .block-title p{color:#475569}
+
+/* Vertiefung block */
+.blk-v .block-header{background:#14532d}
+.blk-v .block-header.locked-hdr{background:#0f2318}
+.blk-v .block-icon{background:#16a34a;color:#fff}
+.blk-v .block-icon.locked-ico{background:#1e293b;color:#334155}
+.blk-v .block-title h3{color:#86efac}
+.blk-v .block-title h3.locked-txt{color:#334155}
+.blk-v .block-title p{color:#166534}
+.blk-v .block-title p.locked-txt{color:#1e293b}
+
+/* Transfer block */
+.blk-t .block-header{background:#431407}
+.blk-t .block-header.locked-hdr{background:#1a0905}
+.blk-t .block-icon{background:#ea580c;color:#fff}
+.blk-t .block-icon.locked-ico{background:#1e293b;color:#334155}
+.blk-t .block-title h3{color:#fdba74}
+.blk-t .block-title h3.locked-txt{color:#334155}
+.blk-t .block-title p{color:#9a3412}
+.blk-t .block-title p.locked-txt{color:#1e293b}
+
+/* Unlock animation */
+@keyframes unlockPop{0%{transform:scale(.95);opacity:.5}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+.just-unlocked{animation:unlockPop .4s ease-out}
+
+/* ── TASKS ── */
+.task-item{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #334155}
+.task-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.lvl{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:7px}
+.lvl-p{background:#1e3a5f;color:#93c5fd}
+.lvl-v{background:#14532d;color:#86efac}
+.lvl-t{background:#431407;color:#fdba74}
+.qtxt{font-size:14px;color:#e2e8f0;line-height:1.65;margin-bottom:10px}
+
+/* Infotext */
+.itext{font-size:13px;color:#cbd5e1;line-height:1.75;margin-bottom:10px}
+.formula{background:#0B3D91;border-radius:10px;padding:12px 16px;font-size:15px;font-weight:700;color:#fff;text-align:center;margin:12px 0}
+.freitext-area{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;font-size:13px;color:#e2e8f0;min-height:80px;resize:vertical;outline:none;font-family:inherit;line-height:1.6;transition:border .15s}
+.freitext-area:focus{border-color:#3b82f6}
+.freitext-hint{font-size:11px;color:#64748b;margin-top:4px;margin-bottom:10px}
+
+/* MC */
+.mc-wrap{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.mc-opt{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 13px;font-size:13px;color:#e2e8f0;cursor:pointer;text-align:left;line-height:1.5;transition:all .15s;width:100%}
+.mc-opt:hover:not(:disabled){background:#1e293b;border-color:#475569}
+.mc-opt.ok{background:#052e16;border-color:#22c55e;color:#86efac}
+.mc-opt.err{background:#1f0707;border-color:#ef4444;color:#fca5a5}
+.mc-opt:disabled{cursor:default}
+
+/* Num input */
+.inp-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.num-inp{flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;font-size:15px;color:#e2e8f0;outline:none;transition:border .15s,background .15s;min-width:0}
+.num-inp:focus{border-color:#3b82f6}
+.num-inp.ok{border-color:#22c55e;background:#052e16}
+.num-inp.err{border-color:#ef4444;background:#1f0707}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .3s}
+.inp-unit{font-size:13px;color:#64748b;white-space:nowrap}
+
+/* Feedback */
+.fb{border-radius:8px;padding:10px 13px;font-size:13px;line-height:1.6;margin-bottom:8px;display:none}
+.fb.show{display:block}
+.fb.ok{background:#052e16;border:1px solid #22c55e;color:#86efac}
+.fb.err{background:#1f0707;border:1px solid #ef4444;color:#fca5a5}
+.fb.info{background:#0f172a;border:1px solid #1e3a5f;color:#93c5fd}
+
+/* Tipp */
+.tipp-btn{width:100%;text-align:left;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:12px;color:#64748b;cursor:pointer;display:flex;justify-content:space-between;margin-bottom:5px}
+.tipp-btn:hover{background:#1e293b}
+.tipp-box{background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;padding:10px 12px;font-size:13px;color:#93c5fd;margin-bottom:6px;display:none;line-height:1.6}
+.tipp-box.open{display:block}
+.tipp-lbl{font-size:10px;font-weight:700;color:#3b82f6;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+
+/* Buttons */
+.btn-primary{width:100%;padding:11px;background:#1d4ed8;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:background .15s}
+.btn-primary:hover{background:#2563eb}
+.btn-primary:disabled{background:#334155;color:#64748b;cursor:default}
+.btn-success{width:100%;padding:11px;background:#15803d;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:background .15s}
+.btn-success:hover{background:#16a34a}
+.btn-next{width:100%;padding:12px;background:#0B3D91;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:none}
+.btn-next.show{display:block}
+.btn-next:hover{background:#1A5AA8}
+
+/* Task done checkmark */
+.task-done-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#22c55e;font-weight:600;margin-top:4px}
+
+/* Progress summary */
+.progress-summary{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center}
+.ps-item{text-align:center;flex:1}
+.ps-num{font-size:18px;font-weight:700;color:#fff}
+.ps-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+
+.timer-bar-wrap{background:#1e293b;border-radius:6px;height:6px;margin-bottom:14px;overflow:hidden;border:1px solid #334155}
+.timer-bar{height:6px;border-radius:6px;transition:width .5s linear,background .5s}
+.timer-bar.ok{background:#22c55e}
+.timer-bar.warn{background:#f59e0b}
+.timer-bar.danger{background:#ef4444}
+.timer-unlocked{background:#052e16;border:1px solid #22c55e;border-radius:8px;padding:8px 12px;font-size:12px;color:#86efac;margin-bottom:10px;display:none}
+.timer-unlocked.show{display:block}
+hr.sep{border:none;border-top:1px solid #334155;margin:10px 0}
+
+/* ── DONE SCREEN ── */
+#done-screen{background:#060d1f;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}
+#done-screen.active{display:flex}
+.done-ring{width:72px;height:72px;background:#FC3D21;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700;margin:0 auto 20px;box-shadow:0 0 40px rgba(252,61,33,.35)}
+#done-screen h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:10px}
+#done-screen .sub{font-size:14px;color:#93c5fd;line-height:1.7;max-width:340px;margin:0 auto 22px}
+.done-stats{display:flex;gap:14px;justify-content:center;margin-bottom:24px;flex-wrap:wrap}
+.stat{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px 20px;text-align:center}
+.stat-n{font-size:26px;font-weight:700;color:#fff}
+.stat-l{font-size:11px;color:#64748b;margin-top:2px}
+.reflex{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px 16px;font-size:13px;color:#94a3b8;line-height:1.65;max-width:380px;margin:0 auto 20px;text-align:left}
+.reflex strong{color:#e2e8f0}
+.restart{background:#0B3D91;color:#fff;border:none;border-radius:10px;padding:13px 32px;font-size:14px;font-weight:600;cursor:pointer}
+.restart:hover{background:#1A5AA8}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start-screen" class="screen active">
+  <div style="background:#060d1f;min-height:100vh;display:flex;flex-direction:column;padding:20px;max-width:500px;margin:0 auto">
+
+    <!-- Header -->
+    <div style="background:#0B3D91;border-radius:14px;padding:18px 20px;margin-bottom:16px;text-align:center">
+      <div style="background:#16a34a;color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:1px;display:inline-block;margin-bottom:10px">MISSION ABGESCHLOSSEN</div>
+      <h1 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:4px">Artemis II &middot; Datenauswertung</h1>
+      <p style="font-size:12px;color:#93c5fd">Physik Klasse 8 &nbsp;&middot;&nbsp; LB 2: Thermische Energie</p>
+    </div>
+
+    <!-- Struktur des Lernpfads -->
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px">Wie ist der Lernpfad aufgebaut?</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- Stationen -->
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="background:#0B3D91;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">4</div>
+          <div>
+            <p style="font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:2px">4 Stationen</p>
+            <p style="font-size:12px;color:#64748b;line-height:1.5">Einstieg &rarr; Kalibrierung &rarr; Systemcheck &rarr; Ingenieursfehler. Jede Station muss abgeschlossen werden, bevor die n&auml;chste auf der Missionskarte erscheint.</p>
+          </div>
+        </div>
+
+        <!-- Drei Ebenen -->
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="background:#1e3a5f;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#93c5fd;flex-shrink:0">P</div>
+          <div>
+            <p style="font-size:13px;font-weight:600;color:#93c5fd;margin-bottom:2px">Pflicht &ndash; f&uuml;r alle</p>
+            <p style="font-size:12px;color:#64748b;line-height:1.5">Muss korrekt gel&ouml;st werden, um die n&auml;chste Station freizuschalten.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="background:#14532d;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#86efac;flex-shrink:0">V</div>
+          <div>
+            <p style="font-size:13px;font-weight:600;color:#86efac;margin-bottom:2px">Vertiefung &ndash; nach Pflicht</p>
+            <p style="font-size:12px;color:#64748b;line-height:1.5">Wird freigeschaltet, wenn alle Pflichtaufgaben einer Station gel&ouml;st sind.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="background:#431407;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fdba74;flex-shrink:0">T</div>
+          <div>
+            <p style="font-size:13px;font-weight:600;color:#fdba74;margin-bottom:2px">Transfer &ndash; Bonusaufgabe</p>
+            <p style="font-size:12px;color:#64748b;line-height:1.5">Erscheint nur, wenn Pflicht <em>und</em> Vertiefung innerhalb des Zeitfensters gel&ouml;st werden. Anspruchsvoll &ndash; nicht f&uuml;r alle erwartet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tipps & Lösungen -->
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px">Tipps & Fehler</div>
+      <div style="font-size:13px;color:#cbd5e1;line-height:1.8">
+        &bull; Bei Rechenaufgaben kannst du deine Antwort mehrfach versuchen.<br>
+        &bull; Gestufte <strong style="color:#3b82f6">Tipps</strong> helfen dir, wenn du nicht weiterkommst.<br>
+        &bull; Nach 3 Fehlversuchen erscheint ein <strong style="color:#7c3aed">L&ouml;sungsbutton</strong> &ndash; nutze ihn bewusst.<br>
+      </div>
+    </div>
+
+    <!-- Tafelbild -->
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px">Tafelbild am Ende</div>
+      <div style="font-size:13px;color:#cbd5e1;line-height:1.8">
+        Wenn du alle Stationen abgeschlossen hast, erscheint ein <strong style="color:#e2e8f0">strukturiertes Tafelbild</strong> mit den wichtigsten Inhalten zur Kelvin- und Celsius-Skala.<br><br>
+        &bull; Zahlenstrahl mit beiden Skalen<br>
+        &bull; Symbole und Umrechnungsformeln<br>
+        &bull; Erkl&auml;rung warum Kelvin in der Physik verwendet wird<br><br>
+        <span style="color:#22c55e;font-weight:600">&#10137; &Uuml;bernimm das Tafelbild am Ende in dein Heft.</span>
+      </div>
+    </div>
+
+    <!-- Start-Button -->
+    <button id="start-btn" style="width:100%;padding:14px;background:#FC3D21;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px">
+      Mission starten &#8594;
+    </button>
+
+  </div>
+</div>
+
+<!-- MAP SCREEN -->
+<div id="map-screen" class="screen">
+  <div class="map-header">
+    <div class="live-pill">MISSION ABGESCHLOSSEN</div>
+    <h1>Artemis II - Datenauswertung</h1>
+    <p>Physik Klasse 8 | LB 2: Thermische Energie</p>
+  </div>
+  <div class="map-body">
+    <svg class="path-svg" viewBox="0 0 340 540" id="mapsvg" aria-hidden="true">
+      <path d="M170 500 C170 465 75 440 75 385 C75 330 265 305 265 250 C265 195 75 170 75 115 C75 72 170 52 170 52"
+            fill="none" stroke="#1e3a5f" stroke-width="3" stroke-dasharray="7 5"/>
+      <path id="ppath" d="" fill="none" stroke="#FC3D21" stroke-width="3.5" stroke-linecap="round"/>
+      <g class="snode" id="sn0" data-idx="0">
+        <circle id="nc0" cx="170" cy="500" r="33" fill="#0B3D91" stroke="#3b82f6" stroke-width="2.5"/>
+        <text id="ni0" x="170" y="497" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#93c5fd" font-family="system-ui,sans-serif">START</text>
+        <text id="nl0" x="170" y="511" text-anchor="middle" font-size="8" fill="#93c5fd" font-family="system-ui,sans-serif">VERFUGBAR</text>
+        <text id="nn0" x="170" y="533" text-anchor="middle" font-size="12" fill="#e2e8f0" font-weight="600" font-family="system-ui,sans-serif">Einstieg</text>
+      </g>
+      <g class="snode locked" id="sn1" data-idx="1">
+        <circle id="nc1" cx="75" cy="385" r="29" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text id="ni1" x="75" y="382" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#64748b" font-family="system-ui,sans-serif">01</text>
+        <text id="nl1" x="75" y="395" text-anchor="middle" font-size="8" fill="#64748b" font-family="system-ui,sans-serif">GESPERRT</text>
+        <text id="nn1" x="75" y="416" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui,sans-serif">Kalibrierung</text>
+      </g>
+      <g class="snode locked" id="sn2" data-idx="2">
+        <circle id="nc2" cx="265" cy="250" r="29" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text id="ni2" x="265" y="247" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#64748b" font-family="system-ui,sans-serif">02</text>
+        <text id="nl2" x="265" y="260" text-anchor="middle" font-size="8" fill="#64748b" font-family="system-ui,sans-serif">GESPERRT</text>
+        <text id="nn2" x="265" y="281" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui,sans-serif">Systemcheck</text>
+      </g>
+      <g class="snode locked" id="sn3" data-idx="3">
+        <circle id="nc3" cx="75" cy="115" r="29" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text id="ni3" x="75" y="112" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#64748b" font-family="system-ui,sans-serif">03</text>
+        <text id="nl3" x="75" y="125" text-anchor="middle" font-size="8" fill="#64748b" font-family="system-ui,sans-serif">GESPERRT</text>
+        <text id="nn3" x="75" y="146" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui,sans-serif">Ingenieursfehler</text>
+      </g>
+      <g class="snode locked" id="sn4" data-idx="4">
+        <circle id="nc4" cx="170" cy="52" r="29" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text id="ni4" x="170" y="49" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#64748b" font-family="system-ui,sans-serif">ZIEL</text>
+        <text id="nl4" x="170" y="62" text-anchor="middle" font-size="8" fill="#64748b" font-family="system-ui,sans-serif">GESPERRT</text>
+        <text id="nn4" x="170" y="83" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui,sans-serif">Abschluss</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <div class="legend-item"><div class="ldot" style="background:#3b82f6"></div>Verfugbar</div>
+      <div class="legend-item"><div class="ldot" style="background:#22c55e"></div>Abgeschlossen</div>
+      <div class="legend-item"><div class="ldot" style="background:#334155"></div>Gesperrt</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Artemis-Datenblatt - immer verfugbar</div>
+      <table class="data-table">
+        <tr><th>Ort / Situation</th><th>Temperatur</th></tr>
+        <tr><td>Weltraum (Weltraum)</td><td>2,7 K</td></tr>
+        <tr><td>Orion-Kabine (Soll)</td><td>295 K</td></tr>
+        <tr><td>Mond - Sonnenseite</td><td>393 K</td></tr>
+        <tr><td>Mond - Schattenseite</td><td>103 K</td></tr>
+        <tr><td>Hitzeschild Wiedereintritt</td><td>1923 K</td></tr>
+        <tr><td>Sonnenoberflache</td><td>5778 K</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STATION SCREEN -->
+<div id="station-screen" class="screen">
+  <div class="stn-header">
+    <button class="back-btn" id="back-btn">&#8592;</button>
+    <div class="stn-info">
+      <h2 id="sh-title">Station</h2>
+      <p id="sh-sub">Physik Klasse 8</p>
+    </div>
+    <div class="stn-badge" id="sh-badge">S0</div>
+  </div>
+  <div class="stn-body" id="stn-body"></div>
+</div>
+
+<!-- DONE SCREEN -->
+<div id="done-screen" class="screen">
+  <div class="done-ring">&#10003;</div>
+  <h1>Mission complete!</h1>
+  <p class="sub">Alle Stationen erfolgreich abgeschlossen.<br>Besprecht die Ergebnisse jetzt im Plenum.</p>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-n" id="ds-correct">0</div><div class="stat-l">Aufgaben gelost</div></div>
+    <div class="stat"><div class="stat-n" id="ds-tips">0</div><div class="stat-l">Tipps genutzt</div></div>
+  </div>
+  <div id="tafelbild" style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;max-width:500px;width:100%;margin:0 auto 20px;text-align:left">
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #334155">
+      <div style="background:#0B3D91;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:#93c5fd;letter-spacing:.5px">TAFELBILD</div>
+      <span style="font-size:13px;font-weight:600;color:#e2e8f0">Temperaturskalen und der absolute Nullpunkt</span>
+      <span style="font-size:11px;color:#64748b;margin-left:auto;font-style:italic">ins Heft übernehmen</span>
+    </div>
+
+    <!-- 1. Zahlenstrahl SVG -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">1. Die zwei Skalen im Vergleich</div>
+      <svg viewBox="0 0 440 130" style="width:100%;display:block" aria-label="Zahlenstrahl Kelvin und Celsius">
+        <!-- Kelvin axis -->
+        <line x1="30" y1="38" x2="420" y2="38" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+        <polygon points="420,33 432,38 420,43" fill="#3b82f6"/>
+        <text x="16" y="42" font-size="11" font-weight="700" fill="#93c5fd" font-family="system-ui,sans-serif">K</text>
+        <!-- Celsius axis -->
+        <line x1="30" y1="92" x2="420" y2="92" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round"/>
+        <polygon points="420,87 432,92 420,97" fill="#0f766e"/>
+        <text x="12" y="96" font-size="11" font-weight="700" fill="#5eead4" font-family="system-ui,sans-serif">°C</text>
+
+        <!-- Fixpunkt 1: Absoluter Nullpunkt 0 K / -273°C -->
+        <line x1="54" y1="28" x2="54" y2="48" stroke="#FC3D21" stroke-width="2"/>
+        <text x="54" y="21" font-size="10" text-anchor="middle" fill="#FC3D21" font-family="system-ui,sans-serif" font-weight="700">0 K</text>
+        <line x1="54" y1="82" x2="54" y2="102" stroke="#FC3D21" stroke-width="2"/>
+        <text x="54" y="115" font-size="10" text-anchor="middle" fill="#FC3D21" font-family="system-ui,sans-serif" font-weight="700">−273 °C</text>
+        <!-- dashed connector -->
+        <line x1="54" y1="48" x2="54" y2="82" stroke="#FC3D21" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- Fixpunkt 2: Gefrierpunkt 273 K / 0°C -->
+        <line x1="190" y1="28" x2="190" y2="48" stroke="#93c5fd" stroke-width="2"/>
+        <text x="190" y="21" font-size="10" text-anchor="middle" fill="#93c5fd" font-family="system-ui,sans-serif" font-weight="700">273 K</text>
+        <line x1="190" y1="82" x2="190" y2="102" stroke="#5eead4" stroke-width="2"/>
+        <text x="190" y="115" font-size="10" text-anchor="middle" fill="#5eead4" font-family="system-ui,sans-serif" font-weight="700">0 °C</text>
+        <line x1="190" y1="48" x2="190" y2="82" stroke="#475569" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- Fixpunkt 3: Raumtemperatur 295 K / 22°C -->
+        <line x1="255" y1="28" x2="255" y2="48" stroke="#93c5fd" stroke-width="1.5"/>
+        <text x="255" y="21" font-size="9.5" text-anchor="middle" fill="#93c5fd" font-family="system-ui,sans-serif">295 K</text>
+        <line x1="255" y1="82" x2="255" y2="102" stroke="#5eead4" stroke-width="1.5"/>
+        <text x="255" y="115" font-size="9.5" text-anchor="middle" fill="#5eead4" font-family="system-ui,sans-serif">22 °C</text>
+        <line x1="255" y1="48" x2="255" y2="82" stroke="#475569" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- Fixpunkt 4: Siedepunkt 373 K / 100°C -->
+        <line x1="330" y1="28" x2="330" y2="48" stroke="#93c5fd" stroke-width="2"/>
+        <text x="330" y="21" font-size="10" text-anchor="middle" fill="#93c5fd" font-family="system-ui,sans-serif" font-weight="700">373 K</text>
+        <line x1="330" y1="82" x2="330" y2="102" stroke="#5eead4" stroke-width="2"/>
+        <text x="330" y="115" font-size="10" text-anchor="middle" fill="#5eead4" font-family="system-ui,sans-serif" font-weight="700">100 °C</text>
+        <line x1="330" y1="48" x2="330" y2="82" stroke="#475569" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- Labels -->
+        <text x="54" y="62" font-size="8" text-anchor="middle" fill="#FC3D21" font-family="system-ui,sans-serif">abs. Nullpunkt</text>
+        <text x="190" y="62" font-size="8" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif">Gefrieren</text>
+        <text x="255" y="62" font-size="8" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif">Raum</text>
+        <text x="330" y="62" font-size="8" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif">Sieden</text>
+
+        <!-- Same step label -->
+        <text x="138" y="38" font-size="8.5" text-anchor="middle" fill="#475569" font-family="system-ui,sans-serif">gleiche Schrittweite</text>
+        <text x="138" y="92" font-size="8.5" text-anchor="middle" fill="#475569" font-family="system-ui,sans-serif">1 K = 1 °C</text>
+      </svg>
+      <p style="font-size:11px;color:#64748b;margin-top:4px">Beide Skalen unterscheiden sich nur in der <strong style="color:#e2e8f0">Wahl der Fixpunkte</strong>. Anders Celsius (1742): Gefrier- und Siedepunkt von Wasser. Kelvin: absoluter Nullpunkt (= die physikalisch kleinstmögliche Temperatur).</p>
+    </div>
+
+    <!-- 2. Symbole und Formeln -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">2. Symbole und Umrechnungsformeln</div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px 13px;font-size:13px;color:#cbd5e1;line-height:1.9;margin-bottom:8px">
+        Celsius-Temperatur: <strong style="color:#5eead4">ϑ</strong> &nbsp;(Theta) &nbsp;in °C<br>
+        Kelvin-Temperatur: <strong style="color:#93c5fd">T</strong> &nbsp;in K
+      </div>
+      <div style="background:#0B3D91;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#fff;text-align:center;line-height:2.2">
+        T&nbsp;(K)&nbsp;=&nbsp;ϑ&nbsp;(°C)&nbsp;+&nbsp;273<br>
+        ϑ&nbsp;(°C)&nbsp;=&nbsp;T&nbsp;(K)&nbsp;&minus;&nbsp;273
+      </div>
+    </div>
+
+    <!-- 3. Warum Kelvin? -->
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#FC3D21;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">3. Warum Kelvin in der Physik?</div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px 13px">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start">
+          <div style="background:#052e16;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:#22c55e;white-space:nowrap;flex-shrink:0">Kelvin</div>
+          <span style="font-size:13px;color:#cbd5e1;line-height:1.6">Kein negativer Wert möglich &ndash; 0&nbsp;K ist das absolute Minimum.<br>Doppeltes T = doppelte mittlere kinetische Energie der Teilchen.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="background:#1f0707;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:#ef4444;white-space:nowrap;flex-shrink:0">Celsius</div>
+          <span style="font-size:13px;color:#94a3b8;line-height:1.6">Nullpunkt willkürlich &ndash; 0&nbsp;°C ist kein Energienullpunkt.<br>Verhältnisse (z. B. doppelt so warm) sind physikalisch nicht sinnvoll.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="restart" id="restart-btn">Von vorne beginnen</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// Stars
+var sc=document.createElement('div');
+sc.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden';
+document.body.appendChild(sc);
+for(var si=0;si<70;si++){
+  var s=document.createElement('div');s.className='star';
+  var sz=Math.random()*2+1;
+  s.style.cssText='width:'+sz+'px;height:'+sz+'px;top:'+Math.random()*100+'%;left:'+Math.random()*100+'%;animation-delay:'+Math.random()*3+'s;animation-duration:'+(2+Math.random()*3)+'s';
+  sc.appendChild(s);
+}
+
+// ── State ──────────────────────────────────────────────
+var G={
+  unlocked:[0], completed:[], tipsUsed:0, correct:0,
+  stnState:{},
+  timers:{}   // si -> {started, elapsed, interval, expired}
+};
+
+function getStnState(si){
+  if(!G.stnState[si]) G.stnState[si]={pflichtDone:false,vertiefDone:false,transferDone:false,infoPhase:0,freitext:''};
+  return G.stnState[si];
+}
+
+// ── Station definitions ────────────────────────────────
+// Each station has: title, sub, pflicht[], vertiefung[], transfer[]
+// Task types: mc, num
+// Info station (S0) is special
+
+var STATIONS=[
+  // S0: Einstieg
+  {
+    title:"Einstieg - Ingenieursstreit",
+    sub:"Station 0",
+    isIntro:true,
+    timerSec:0,
+    // Infotext MC questions (appear after freitext, infotext hidden)
+    infoMC:[
+      {
+        q:"Was passiert mit den Teilchen eines Korpers bei 0 K?",
+        opts:[
+          {t:"Sie bewegen sich sehr langsam, aber noch etwas.", ok:false},
+          {t:"Sie haben keine kinetische Energie mehr - jede Bewegung ist vollstandig zum Stillstand gekommen.", ok:true},
+          {t:"Sie gefrieren zu Eis.", ok:false},
+          {t:"Sie verschwinden.", ok:false}
+        ],
+        fok:"Richtig! 0 K ist der absolute Energieboden - keine Bewegung mehr moglich.",
+        ferr:"Lies deinen eigenen Text nochmal: Was hast du uber 0 K geschrieben?"
+      },
+      {
+        q:"Welche Aussage zur Kelvin-Skala stimmt?",
+        opts:[
+          {t:"Kelvin startet beim Gefrierpunkt von Wasser (0 Grad C).", ok:false},
+          {t:"Kelvin hat eine andere Schrittweite als Celsius.", ok:false},
+          {t:"Kelvin startet beim absoluten Nullpunkt und hat dieselbe Schrittweite wie Celsius.", ok:true},
+          {t:"Kelvin und Celsius sind identisch.", ok:false}
+        ],
+        fok:"Korrekt! Gleiche Schrittweite, anderer Nullpunkt - das ist der entscheidende Unterschied.",
+        ferr:"Schau in deinen Text: Was unterscheidet Kelvin von Celsius genau?"
+      },
+      {
+        q:"Was bedeutet es physikalisch, wenn sich die Kelvin-Temperatur verdoppelt?",
+        opts:[
+          {t:"Der Korper wird doppelt so gross.", ok:false},
+          {t:"Die mittlere kinetische Energie der Teilchen verdoppelt sich.", ok:true},
+          {t:"Die Celsius-Temperatur verdoppelt sich ebenfalls.", ok:false},
+          {t:"Es bedeutet nichts Besonderes.", ok:false}
+        ],
+        fok:"Perfekt! Doppelte Kelvin-Temperatur = doppelte mittlere kinetische Energie. Nur in Kelvin gilt diese Proportionalitat.",
+        ferr:"Was hast du uber den Zusammenhang zwischen Kelvin-Temperatur und Teilchenenergie geschrieben?"
+      }
+    ],
+    // Pflicht = initial MC before infotext
+    pflicht:[
+      {
+        type:"mc", lbl:"Einstiegsfrage",
+        q:"Zwei Ingenieure streiten sich. Ingenieur A: Ein Gas bei 20 Grad C ist doppelt so warm wie eines bei 10 Grad C. Was denkst du - hat er recht?",
+        opts:[
+          {t:"Ja, 20 ist doppelt so viel wie 10.", ok:false},
+          {t:"Nein, denn die Celsius-Skala beginnt nicht beim absoluten Nullpunkt.", ok:true},
+          {t:"Es kommt auf den Luftdruck an.", ok:false},
+          {t:"Nur wenn beide Gase gleich schwer sind.", ok:false}
+        ],
+        fok:"Richtig! Lies jetzt den Infotext - danach wirst du das genau begrunden konnen.",
+        ferr:"Noch nicht ganz. Uberlege: Ist 0 Grad C wirklich der absolute Kaltepunkt?",
+        tip:"Was bedeutet 0 Grad C im Teilchenmodell?"
+      }
+    ],
+    vertiefung:[], transfer:[]
+  },
+
+  // S1: Kalibrierung
+  {
+    title:"Station 1 - Kalibrierung",
+    sub:"Artemis-Werte umrechnen",
+    isIntro:false,
+    timerSec:360,
+    pflicht:[
+      {
+        type:"num", lbl:"Pflicht 1/3",
+        q:"Rechne um: Der Weltraum hat 2,7 K Hintergrundtemperatur. Wie viel Grad Celsius?",
+        unit:"Grad C", ans:-270.3, tol:0.5,
+        fok:"Korrekt! 2,7 - 273 = -270,3 Grad C. Minimale Teilchenbewegung dort draussen.",
+        ferr:"Nutze: ϑ (°C) = T (K) - 273",
+        t1:"Formel: ϑ (°C) = T (K) - 273",
+        t2:"2,7 - 273 = ?"
+      },
+      {
+        type:"num", lbl:"Pflicht 2/3",
+        q:"Die Orion-Kabine wird auf 295 K gehalten. Wie viel Grad Celsius?",
+        unit:"Grad C", ans:22, tol:0.5,
+        fok:"Perfekt! 295 - 273 = 22 Grad C - angenehme Raumtemperatur fur die Crew.",
+        ferr:"Nutze: ϑ (°C) = T (K) - 273",
+        t1:"Formel: ϑ (°C) = T (K) - 273",
+        t2:"295 - 273 = ?"
+      },
+      {
+        type:"num", lbl:"Pflicht 3/3",
+        q:"Der Hitzeschild erreicht 1923 K. Wie viel Grad Celsius?",
+        unit:"Grad C", ans:1650, tol:1,
+        fok:"Richtig! 1923 - 273 = 1650 Grad C - heisser als flussige Lava.",
+        ferr:"Nutze: ϑ (°C) = T (K) - 273",
+        t1:"Formel: ϑ (°C) = T (K) - 273",
+        t2:"1923 - 273 = ?"
+      }
+    ],
+    vertiefung:[
+      {
+        type:"mc", lbl:"Vertiefung",
+        q:"Ein Mitschüler sagt: 'Der Weltraum hat 2,7 K und die Orion-Kabine 295 K. Der Unterschied in Celsius ist genauso groß wie in Kelvin – also macht die Wahl der Skala keinen Unterschied.' Analysiere diese Aussage: Was stimmt, was ist falsch?",
+        opts:[
+          {t:"Die Aussage stimmt vollständig – Kelvin und Celsius sind bei Differenzen und Verhältnissen gleichwertig.", ok:false},
+          {t:"Die Aussage ist komplett falsch – Kelvin und Celsius können nie dasselbe Ergebnis liefern.", ok:false},
+          {t:"Der erste Teil stimmt: Temperaturdifferenzen sind in K und °C identisch. Aber die Schlussfolgerung ist falsch: Verhältnisse wie 'doppelt so warm' sind nur in Kelvin physikalisch sinnvoll.", ok:true},
+          {t:"Die Aussage stimmt, aber nur weil es sich um Raumtemperaturen handelt.", ok:false}
+        ],
+        fok:"Genau analysiert! ΔT ist in K und °C tatsächlich identisch – das stimmt. Aber Verhältnisse wie 'X-mal heißer' erfordern Kelvin, weil nur Kelvin beim absoluten Energienullpunkt beginnt. In Celsius wäre ein solcher Vergleich physikalisch bedeutungslos.",
+        ferr:"Prüfe beide Teile der Aussage getrennt: Was ist mit Temperaturdifferenzen (ΔT)? Und was ist mit Verhältnissen wie 'doppelt so warm'?",
+        tip:"Sind Temperaturdifferenzen in K und °C gleich? Und gilt dasselbe für Verhältnisse wie '295 K ist X-mal so warm wie 2,7 K'?"
+      }
+    ],
+    transfer:[
+      {
+        type:"mc", lbl:"Transfer",
+        q:"Auf dem Mars beträgt die Durchschnittstemperatur −60 °C, auf der Venus +465 °C. Ein Journalist schreibt: 'Die Venus ist mit 465 °C unvorstellbar viel heißer als der Mars mit −60 °C – der Unterschied ist fast grenzenlos.' Wie viel mal mehr kinetische Energie haben die Teilchen auf der Venus wirklich? Und wie bewertest du die Journalistenaussage?",
+        opts:[
+          {t:"Der Journalist hat recht – ein Unterschied von 525 °C ist tatsächlich fast grenzenlos.", ok:false},
+          {t:"Der Journalist übertreibt: Die Teilchen auf der Venus haben deutlich mehr kinetische Energie als auf dem Mars, aber ein endliches, berechenbares Verhältnis.", ok:true},
+          {t:"Der Vergleich ist unmöglich, weil der Mars negative Celsius-Werte hat.", ok:false},
+          {t:"Der Unterschied ist tatsächlich grenzenlos, weil absolute Temperaturen nicht verglichen werden können.", ok:false}
+        ],
+        fok:"Richtig! Mars: −60 °C = 213 K. Venus: 465 °C = 738 K. Verhältnis: 738 / 213 ≈ 3,5. Die Teilchen auf der Venus haben also etwa 3,5-mal mehr kinetische Energie – erheblich, aber nicht 'grenzenlos'. Der Journalist denkt in Celsius-Differenzen (525 Grad Unterschied) statt in physikalischen Verhältnissen.",
+        ferr:"Rechne beide Temperaturen zuerst in Kelvin um. Dann bilde den Quotienten: T_Venus / T_Mars. Das Ergebnis gibt an, wie viel mal mehr kinetische Energie die Teilchen auf der Venus haben.",
+        tip:"Mars: −60 + 273 = ? K. Venus: 465 + 273 = ? K. Dann: T_Venus / T_Mars = ?"
+      }
+    ]
+  },
+
+  // S2: Systemcheck
+  {
+    title:"Station 2 - Systemcheck",
+    sub:"Teilchenmodell und Delta-T",
+    isIntro:false,
+    timerSec:300,
+    pflicht:[
+      {
+        type:"mc", lbl:"Pflicht 1/2",
+        q:"Warum gibt es keine negativen Kelvin-Werte?",
+        opts:[
+          {t:"Weil negative Zahlen in der Physik verboten sind.", ok:false},
+          {t:"Bei 0 K haben alle Teilchen keine kinetische Energie mehr - man kann ihnen keine weitere entziehen.", ok:true},
+          {t:"Weil Kelvin nur fur heisse Objekte gilt.", ok:false},
+          {t:"Weil 0 K dem Gefrierpunkt von Wasser entspricht.", ok:false}
+        ],
+        fok:"Richtig! 0 K ist der absolute Energieboden. Keine Bewegung = nichts mehr entziehbar.",
+        ferr:"Denk ans Teilchenmodell: Was passiert mit der Bewegung bei immer tieferer Temperatur?",
+        tip:"Temperatur = mittlere kinetische Energie. Was ist, wenn diese Energie 0 erreicht?"
+      },
+      {
+        type:"num", lbl:"Pflicht 2/2",
+        q:"Die Orion-Kabine wird von 250 K auf 295 K geheizt. Berechne ΔT in Kelvin.",
+        unit:"K", ans:45, tol:0,
+        fok:"Korrekt! ΔT = 295 − 250 = 45 K.",
+        ferr:"ΔT = T_end − T_start",
+        t1:"ΔT = T₂ − T₁",
+        t2:"295 − 250 = ?"
+      }
+    ],
+    vertiefung:[
+      {
+        type:"mc", lbl:"Vertiefung",
+        q:"Schüler A sagt: 'Wenn ich ein Gas von 200 K auf 400 K erwärme, verdoppelt sich auch die Celsius-Temperatur.' Schüler B widerspricht. Wer hat recht? Rechne nach: Was ist 200 K und 400 K in °C – und verdoppelt sich der Celsius-Wert?",
+        opts:[
+          {t:"Schüler A hat recht: Wenn sich die Kelvin-Temperatur verdoppelt, verdoppelt sich auch der Celsius-Wert.", ok:false},
+          {t:"Schüler B hat recht: Der Celsius-Wert verdoppelt sich nicht, weil 0 °C kein physikalischer Energienullpunkt ist – die Verdoppelung gilt nur in Kelvin.", ok:true},
+          {t:"Beide haben recht, weil Kelvin und Celsius dieselbe Schrittweite haben.", ok:false},
+          {t:"Es kommt auf den Stoff an, nicht auf die Skala.", ok:false}
+        ],
+        fok:"Richtig! Rechne selbst nach: 200 K − 273 = −73 °C. 400 K − 273 = 127 °C. Ist 127 das Doppelte von −73? Nein. Der Fehler von Schüler A: Er überträgt die Verdoppelungslogik auf Celsius, wo sie nicht gilt, weil 0 °C kein absoluter Energienullpunkt ist.",
+        ferr:"Rechne: 200 K in °C, 400 K in °C. Ist der zweite Celsius-Wert doppelt so groß wie der erste?",
+        tip:"200 K − 273 = ? °C. 400 K − 273 = ? °C. Ist das zweite Ergebnis doppelt so groß wie das erste?"
+      }
+    ],
+    transfer:[
+      {
+        type:"mc", lbl:"Transfer",
+        q:"Die Orion-Kabine hat tatsächlich 22 °C (= 295 K) – angenehme Raumtemperatur. Ein Ingenieur berechnet, wie viel Prozent wärmer die Kabine gegenüber dem Weltraum (2,7 K) ist. Er rechnet in Celsius: (22 − (−270,3)) / (−270,3) × 100 und bekommt einen negativen, sinnlosen Wert. Sein Kollege rechnet in Kelvin: (295 − 2,7) / 2,7 × 100 ≈ 10 826 %. Welche Aussage erklärt das Problem korrekt?",
+        opts:[
+          {t:"Der erste Ingenieur hat einen Rechenfehler gemacht. Mit Celsius erhält man dasselbe Ergebnis.", ok:false},
+          {t:"Prozentualer Vergleich von Temperaturen ergibt nur in Kelvin einen physikalisch sinnvollen Wert, weil nur Kelvin beim absoluten Nullpunkt beginnt. In Celsius führen negative Ausgangswerte zu unsinnigen Ergebnissen.", ok:true},
+          {t:"Der Vergleich ist generell unzulässig, weil man Temperaturen nicht prozentual vergleichen darf.", ok:false},
+          {t:"Beide Methoden sind falsch – man müsste absolute Differenzen statt Prozente verwenden.", ok:false}
+        ],
+        fok:"Richtig! Prozentualer Vergleich setzt einen sinnvollen Nullpunkt voraus. In Celsius ist der Nullpunkt willkürlich – negative Ausgangswerte machen prozentuale Aussagen bedeutungslos oder mathematisch absurd. In Kelvin beginnt die Skala beim absoluten Energienullpunkt, daher ergibt der Quotient eine physikalisch interpretierbare Aussage: Die Kabine hat über 10 000 % mehr thermische Energie als der Weltraum.",
+        ferr:"Warum ergibt die Division durch einen negativen Celsius-Wert keinen sinnvollen Prozentsatz? Was wäre ein physikalisch sinnvoller Nullpunkt für einen Vergleich?",
+        tip:"Was passiert mathematisch, wenn man durch einen negativen Wert dividiert? Und welche Skala hat einen Nullpunkt, der physikalisch dem 'Nichts' entspricht?"
+      }
+    ]
+  },
+
+  // S3: Ingenieursfehler
+  {
+    title:"Station 3 - Ingenieursfehler",
+    sub:"Kritisch denken",
+    isIntro:false,
+    timerSec:300,
+    pflicht:[
+      {
+        type:"mc", lbl:"Pflicht",
+        q:"Ingenieur schreibt: Der Hitzeschild mit 1923 K ist 1923-mal heisser als eine Eiswurfelschale. Der Chefingenieur streicht den Satz. Warum?",
+        opts:[
+          {t:"Weil 1923 K falsch berechnet ist.", ok:false},
+          {t:"Weil Kelvin-Werte nicht als Vielfache interpretiert werden konnen - eine Eiswurfelschale hat ca. 273 K, nicht 0 K.", ok:true},
+          {t:"Weil Hitzeschilde keine Temperatur haben.", ok:false},
+          {t:"Weil die Einheit fehlt.", ok:false}
+        ],
+        fok:"Richtig! Eine Eiswurfelschale hat 273 K. Der Ingenieur verwechselt Kelvin-Wert mit einem Verhaltnis vom absoluten Nullpunkt.",
+        ferr:"Was hat eine Eiswurfelschale fur eine Temperatur in Kelvin?",
+        tip:"0 Grad C = 273 K. Ist eine Eiswurfelschale wirklich bei 0 K?"
+      }
+    ],
+    vertiefung:[
+      {
+        type:"mc", lbl:"Vertiefung",
+        q:"Flüssiger Stickstoff siedet bei −196 °C (= 77 K). Unterhalb dieser Temperatur ist er flüssig, darüber gasförmig. Ein Schüler sagt: 'Bei doppelter Kelvin-Temperatur wäre Stickstoff wieder flüssig.' Was passiert tatsächlich bei doppelter Kelvin-Temperatur? Rechne nach und beurteile die Aussage.",
+        opts:[
+          {t:"Die Aussage ist falsch: Bei doppelter Kelvin-Temperatur wäre Stickstoff gasförmig, nicht flüssig.", ok:true},
+          {t:"Die Aussage stimmt: Doppelte Kelvin-Temperatur bedeutet, der Stoff kehrt in den flüssigen Zustand zurück.", ok:false},
+          {t:"Die Aussage stimmt nicht, weil man Kelvin-Temperaturen nicht verdoppeln darf.", ok:false},
+          {t:"Es kommt auf den Druck an – ohne Druckangabe ist keine Aussage möglich.", ok:false}
+        ],
+        fok:"Richtig! Rechne selbst: −196 °C + 273 = 77 K. Doppelt: 154 K = −119 °C. Stickstoff siedet bei 77 K (−196 °C) – bei 154 K hat er bereits mehr als doppelt so viel kinetische Energie und ist längst gasförmig. Doppelte Energie bedeutet mehr Bewegung, nicht Rückkehr in den flüssigen Zustand.",
+        ferr:"Rechne: −196 °C in Kelvin. Verdopple. Zurück in °C. Liegt das über oder unter dem Siedepunkt?",
+        tip:"−196 + 273 = ? K. Diesen Wert verdoppeln. Ergebnis − 273 = ? °C. Ist das heisser oder kälter als −196 °C?"
+      }
+    ],
+    transfer:[
+      {
+        type:"mc", lbl:"Transfer",
+        q:"Die Orion-Kapsel muss beim Wiedereintritt in die Atmosphäre von 1923 K auf 295 K (Kabinentemperatur) abgekühlt werden. Ein Ingenieur berechnet die nötige Wärmeabfuhr für die Aluminiumhülle (m = 800 kg, c = 0,9 kJ/(kg·K)) und schreibt versehentlich alle Temperaturen in °C: ϑ₁ = 1650 °C, ϑ₂ = 22 °C, Δϑ = 1628 °C. Sein Kollege rechnet in Kelvin: T₁ = 1923 K, T₂ = 295 K, ΔT = 1628 K. Beide erhalten für Q = m·c·ΔT dasselbe Ergebnis. Ein dritter Ingenieur möchte aber zusätzlich wissen, um welchen Faktor die Teilchenenergie in der Kapsel nach der Abkühlung geringer ist. Warum liefert hier nur Kelvin eine sinnvolle Antwort?",
+        opts:[
+          {t:"Weil Celsius-Werte zu klein sind für diese Berechnung.", ok:false},
+          {t:"Für ΔT (Differenzen) sind beide Skalen gleichwertig. Für das Verhältnis der Teilchenenergien (T₂/T₁) muss man Kelvin nutzen, weil nur Kelvin beim absoluten Energienullpunkt beginnt. In Celsius wäre 22/1650 physikalisch bedeutungslos.", ok:true},
+          {t:"Weil die Formel Q = m·c·ΔT nur mit Kelvin funktioniert.", ok:false},
+          {t:"Beide Skalen liefern auch für das Verhältnis dasselbe Ergebnis.", ok:false}
+        ],
+        fok:"Exzellent! Für ΔT ist die Skalenwahl egal – 1628 K = 1628 °C. Aber für das Verhältnis der Teilchenenergien gilt: 295 K / 1923 K ≈ 0,15 – die Kabine hat nach der Abkühlung nur noch 15 % der ursprünglichen kinetischen Energie. In Celsius wäre 22 / 1650 ≈ 0,013 – ein falscher Wert ohne physikalische Bedeutung. Das zeigt: Kelvin ist bei Differenzen optional, bei Verhältnissen zwingend.",
+        ferr:"Denke an zwei verschiedene Rechnungen: ΔT (Differenz) und T₂/T₁ (Verhältnis). Für welche der beiden macht die Skalenwahl einen Unterschied – und warum?",
+        tip:"Sind Differenzen und Verhältnisse dieselbe Art von Rechnung? Bei welcher spielt der Nullpunkt der Skala eine Rolle?"
+      }
+    ]
+  }
+];
+
+var PATHS=["","M170 500 C170 465 75 440 75 385","M170 500 C170 465 75 440 75 385 C75 330 265 305 265 250","M170 500 C170 465 75 440 75 385 C75 330 265 305 265 250 C265 195 75 170 75 115","M170 500 C170 465 75 440 75 385 C75 330 265 305 265 250 C265 195 75 170 75 115 C75 72 170 52 170 52"];
+
+// ── Map update ─────────────────────────────────────────
+function updateMap(){
+  var maxDone=G.completed.length>0?Math.max.apply(null,G.completed):-1;
+  var maxUnlock=G.unlocked.length>0?Math.max.apply(null,G.unlocked):0;
+  var pi=Math.min(Math.max(maxDone+1,maxUnlock),4);
+  document.getElementById('ppath').setAttribute('d',PATHS[pi]||"");
+  var cols=["#0B3D91","#1d4ed8","#0f766e","#7c3aed","#FC3D21"];
+  var lbls=["START","01","02","03","ZIEL"];
+  for(var i=0;i<=4;i++){
+    var nc=document.getElementById('nc'+i),ni=document.getElementById('ni'+i),nl=document.getElementById('nl'+i),nn=document.getElementById('nn'+i),sn=document.getElementById('sn'+i);
+    if(!nc)continue;
+    if(G.completed.indexOf(i)>=0){
+      nc.setAttribute('fill','#052e16');nc.setAttribute('stroke','#22c55e');nc.setAttribute('stroke-width','2.5');
+      ni.textContent='OK';ni.setAttribute('fill','#22c55e');nl.textContent='FERTIG';nl.setAttribute('fill','#22c55e');nn.setAttribute('fill','#86efac');
+      sn.classList.remove('locked');
+    } else if(G.unlocked.indexOf(i)>=0){
+      nc.setAttribute('fill',cols[i]||'#0B3D91');nc.setAttribute('stroke','#93c5fd');nc.setAttribute('stroke-width','2.5');
+      ni.textContent=lbls[i];ni.setAttribute('fill','#fff');nl.textContent='VERFUGBAR';nl.setAttribute('fill','#93c5fd');nn.setAttribute('fill','#e2e8f0');
+      sn.classList.remove('locked');
+    } else {
+      nc.setAttribute('fill','#1e293b');nc.setAttribute('stroke','#334155');nc.setAttribute('stroke-width','2');
+      ni.textContent=lbls[i];ni.setAttribute('fill','#475569');nl.textContent='GESPERRT';nl.setAttribute('fill','#475569');nn.setAttribute('fill','#475569');
+      sn.classList.add('locked');
+    }
+  }
+}
+
+// ── Open station ───────────────────────────────────────
+function openStation(idx){
+  if(G.unlocked.indexOf(idx)<0&&G.completed.indexOf(idx)<0)return;
+  if(idx===4){showDone();return;}
+  G.curS=idx;
+  startTimer(idx);
+  showScreen('station-screen');
+  renderStation(idx);
+}
+
+// ── Render full station ────────────────────────────────
+function renderStation(si, noScroll){
+  var st=STATIONS[si];
+  var ss=getStnState(si);
+  document.getElementById('sh-title').textContent=st.title;
+  document.getElementById('sh-sub').textContent=st.sub;
+  document.getElementById('sh-badge').textContent='S'+si;
+
+  var html='';
+
+  // Progress summary
+  var pd=ss.pflichtDone?1:0, vd=ss.vertiefDone?1:0, td=ss.transferDone?1:0;
+  html+='<div class="progress-summary">'
+    +'<div class="ps-item"><div class="ps-num" style="color:'+(pd?'#22c55e':'#64748b')+'">'+pd+'/1</div><div class="ps-lbl">Pflicht</div></div>'
+    +(st.vertiefung.length>0?'<div class="ps-item"><div class="ps-num" style="color:'+(vd?'#22c55e':'#64748b')+'">'+vd+'/1</div><div class="ps-lbl">Vertiefung</div></div>':'')
+    +(st.transfer.length>0?'<div class="ps-item"><div class="ps-num" style="color:'+(td?'#22c55e':'#64748b')+'">'+td+'/1</div><div class="ps-lbl">Transfer</div></div>':'')
+    +'</div>';
+
+  if(st.isIntro){
+    html+=renderIntroStation(si,ss);
+  } else {
+    html+=renderNormalStation(si,ss,st);
+  }
+
+  var body = document.getElementById('stn-body');
+  var scrollPos = body ? body.scrollTop : 0;
+  body.innerHTML = html;
+  if(!noScroll){ window.scrollTo(0,0); }
+}
+
+// ── Intro station (S0) ─────────────────────────────────
+function renderIntroStation(si,ss){
+  var st=STATIONS[si];
+  var html='';
+
+  // PFLICHT BLOCK
+  html+='<div class="block-card blk-p">';
+  html+='<div class="block-header"><div class="block-icon">P</div><div class="block-title"><h3>Pflicht</h3><p>Einstiegsfrage + Infotext</p></div><div class="block-status">'+(ss.pflichtDone?'&#10003;':'')+'</div></div>';
+  html+='<div class="block-body open">';
+
+  if(ss.infoPhase===0){
+    // Phase 0: Einstiegsfrage MC
+    var task=st.pflicht[0];
+    html+=renderMCHtml(task,'p0-mc',si,'p');
+    html+='<button class="btn-next show" id="next-p0" style="display:none">Weiter zum Infotext &#8594;</button>';
+  } else if(ss.infoPhase===1){
+    // Phase 1: Infotext + Freitext
+    html+='<p class="itext">Im Alltag messen wir Temperatur in <strong>Grad Celsius (ϑ)</strong>. Der schwedische Astronom <strong>Anders Celsius</strong> legte 1742 zwei Fixpunkte fest: den Gefrierpunkt von Wasser als 0 °C und den Siedepunkt als 100 °C. Diese Wahl ist praktisch für den Alltag – aber ist sie physikalisch sinnvoll?</p>';
+    html+='<p class="itext">Das Problem: Ein Gas bei 20 °C hat nach der Celsius-Skala scheinbar <em>doppelt so viel</em> Temperatur wie bei 10 °C. Physikalisch stimmt das jedoch nicht – denn der Nullpunkt von Celsius ist kein absoluter Energienullpunkt, sondern eine willkürliche Wahl.</p>';
+    html+='<p class="itext">Im Teilchenmodell ist Temperatur ein Maß für die <strong>mittlere kinetische Energie der Teilchen</strong>. Bei −0 °C (= 0 K) hört jede Teilchenbewegung vollständig auf – das ist der <strong>absolute Nullpunkt</strong>. Jede weitere Abkühlung ist unmöglich: es gibt keine negativen Kelvin-Werte.</p>';
+    html+='<p class="itext">Die <strong>Kelvin-Skala (T)</strong> beginnt genau an diesem Punkt. Sie hat dieselbe Schrittweite wie Celsius – 1 K entspricht 1 °C. Die beiden Skalen unterscheiden sich also ausschließlich in der <strong>Wahl der Fixpunkte</strong>: Während Celsius den Gefrierpunkt von Wasser als Nullpunkt wählt, beginnt Kelvin beim absoluten Nullpunkt. Man schreibt Celsius-Temperaturen als <strong>ϑ</strong> und Kelvin-Temperaturen als <strong>T</strong>.</p>';
+    html+='<p class="itext"><strong>Doppelte Kelvin-Temperatur = doppelte mittlere kinetische Energie der Teilchen.</strong> Das gilt für Celsius <em>nicht</em>, weil ihr Nullpunkt kein physikalischer Energienullpunkt ist.</p>';
+    html+='<div class="formula">T (K) = ϑ (°C) + 273   |   ϑ (°C) = T (K) − 273</div>';
+    html+='<hr class="sep">';
+    html+='<p class="qtxt">Lies den Text sorgfaltig. Formuliere dann in eigenen Worten: <strong>Was ist der absolute Nullpunkt?</strong></p>';
+    html+='<textarea class="freitext-area" id="freitext-inp" placeholder="Schreibe hier deine Erklarung...">'+esc(ss.freitext||'')+'</textarea>';
+    html+='<p class="freitext-hint">Nutze Fachbegriffe: Teilchen, kinetische Energie, Bewegung</p>';
+    html+='<button class="btn-primary" id="submit-freitext">Weiter - Text wird ausgeblendet &#8594;</button>';
+  } else if(ss.infoPhase>=2){
+    // Phase 2+: Infotext weg, Freitext sichtbar, MC-Fragen
+    html+='<div class="fb info show" style="margin-bottom:12px"><strong>Deine Antwort:</strong><br>'+esc(ss.freitext||'(kein Text eingegeben)')+'</div>';
+    html+='<p style="font-size:13px;color:#64748b;margin-bottom:12px">Der Infotext ist jetzt ausgeblendet. Beantworte die folgenden Fragen mithilfe deines eigenen Textes.</p>';
+
+    var mcIdx=ss.infoPhase-2; // 0,1,2
+    for(var i=0;i<st.infoMC.length;i++){
+      var mc=st.infoMC[i];
+      var done=(ss.infoPhase-2)>i;
+      html+='<div class="task-item">';
+      html+=renderMCHtmlIndexed(mc,'info-mc-'+i,si,'p',done);
+      if(i===mcIdx&&!done){
+        // active question - already rendered interactive above
+      }
+      html+='</div>';
+      if(i>=mcIdx) break; // only show up to current
+    }
+
+    if(!ss.pflichtDone){
+      html+='<button class="btn-next" id="next-info-mc" style="display:none">Fertig &#8594;</button>';
+    } else {
+      html+='<div class="task-done-badge">&#10003; Pflichtblock abgeschlossen</div>';
+    }
+  }
+
+  html+='</div></div>'; // end pflicht block
+
+  // VERTIEFUNG (empty for S0)
+  // TRANSFER (empty for S0)
+
+  // Next station button
+  if(ss.pflichtDone){
+    html+='<button class="btn-next show" id="complete-station">Zur nachsten Station &#8594;</button>';
+  }
+
+  return html;
+}
+
+// ── Normal station ─────────────────────────────────────
+function renderNormalStation(si,ss,st){
+  var html='';
+
+  // ── TIMER BAR ──
+  var st2=STATIONS[si];
+  if(st2&&st2.timerSec>0){
+    var elapsed2=G.timers[si]?G.timers[si].elapsed:0;
+    var total2=st2.timerSec;
+    var pct2=Math.max(0,Math.min(100,Math.round((1-(elapsed2/total2))*100)));
+    var barCls=pct2>50?'ok':(pct2>20?'warn':'danger');
+    html+='<div style="margin-bottom:10px"><div style="font-size:11px;color:#64748b;margin-bottom:4px;display:flex;justify-content:space-between"><span>Zeitfenster f\u00fcr Transfer-Freischaltung</span><span style="color:'+(G.timers[si]&&G.timers[si].expired?'#ef4444':'#64748b')+'">'+(G.timers[si]&&G.timers[si].expired?'Abgelaufen':'L\u00e4uft')+'</span></div><div class="timer-bar-wrap"><div class="timer-bar '+barCls+'" id="tbar-'+si+'" style="width:'+pct2+'%"></div></div></div>';
+  }
+
+  // ── PFLICHT BLOCK ──
+  html+='<div class="block-card blk-p">';
+  html+='<div class="block-header"><div class="block-icon">P</div><div class="block-title"><h3>Pflicht</h3><p>'+st.pflicht.length+' Aufgabe'+(st.pflicht.length>1?'n':'')+'</p></div><div class="block-status">'+(ss.pflichtDone?'&#10003;':'')+'</div></div>';
+  html+='<div class="block-body open">';
+  for(var i=0;i<st.pflicht.length;i++){
+    var task=st.pflicht[i];
+    var done=ss['pflicht_'+i]||false;
+    html+='<div class="task-item">';
+    if(task.type==='mc') html+=renderMCHtml(task,'p-'+i,si,'p');
+    else html+=renderNumHtml(task,'p-'+i,si,'p');
+    html+='</div>';
+  }
+  if(!ss.pflichtDone){
+    html+='<button class="btn-next" id="unlock-v" style="display:none">Vertiefung freischalten &#8594;</button>';
+  } else {
+    html+='<div class="task-done-badge">&#10003; Pflicht abgeschlossen - Vertiefung freigeschaltet</div>';
+  }
+  html+='</div></div>';
+
+  // ── VERTIEFUNG BLOCK ──
+  if(st.vertiefung.length>0){
+    var vLocked=!ss.pflichtDone;
+    html+='<div class="block-card blk-v" id="blk-v">';
+    html+='<div class="block-header'+(vLocked?' locked-hdr':'')+'"><div class="block-icon'+(vLocked?' locked-ico':'')+'">V</div>';
+    html+='<div class="block-title"><h3'+(vLocked?' class="locked-txt"':'')+'>Vertiefung</h3><p'+(vLocked?' class="locked-txt"':'')+'>'+(vLocked?'Pflicht losen zum Freischalten':'Optional - empfohlen')+'</p></div>';
+    html+='<div class="block-status">'+(ss.vertiefDone?'&#10003;':(vLocked?'&#128274;':''))+'</div></div>';
+    if(!vLocked){
+      html+='<div class="block-body open">';
+      for(var j=0;j<st.vertiefung.length;j++){
+        var vtask=st.vertiefung[j];
+        html+='<div class="task-item">';
+        if(vtask.type==='mc') html+=renderMCHtml(vtask,'v-'+j,si,'v');
+        else html+=renderNumHtml(vtask,'v-'+j,si,'v');
+        html+='</div>';
+      }
+      if(!ss.vertiefDone){
+        html+='<button class="btn-next" id="unlock-t" style="display:none">Transfer freischalten &#8594;</button>';
+      } else {
+        html+='<div class="task-done-badge">&#10003; Vertiefung abgeschlossen - Transfer freigeschaltet</div>';
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+
+  // ── TRANSFER BLOCK ──
+  if(st.transfer.length>0){
+    var timerUnlocks=!st.timerSec||(ss.transferUnlocked||false);
+    var tLocked=(!ss.vertiefDone&&st.vertiefung.length>0)||!timerUnlocks;
+    if(st.vertiefung.length===0) tLocked=!ss.pflichtDone||!timerUnlocks;
+    html+='<div class="block-card blk-t" id="blk-t">';
+    html+='<div class="block-header'+(tLocked?' locked-hdr':'')+'"><div class="block-icon'+(tLocked?' locked-ico':'')+'">T</div>';
+    html+='<div class="block-title"><h3'+(tLocked?' class="locked-txt"':'')+'>Transfer</h3><p'+(tLocked?' class="locked-txt"':'')+'>'+(tLocked?(ss.vertiefDone&&!timerUnlocks?'Zeitfenster abgelaufen':'Vertiefung losen zum Freischalten'):'Anspruchsvoll - Extraaufgabe')+'</p></div>';
+    html+='<div class="block-status">'+(ss.transferDone?'&#10003;':(tLocked?'&#128274;':''))+'</div></div>';
+    if(!tLocked){
+      html+='<div class="block-body open">';
+      for(var k=0;k<st.transfer.length;k++){
+        var ttask=st.transfer[k];
+        html+='<div class="task-item">';
+        if(ttask.type==='mc') html+=renderMCHtml(ttask,'t-'+k,si,'t');
+        else html+=renderNumHtml(ttask,'t-'+k,si,'t');
+        html+='</div>';
+      }
+      if(ss.transferDone){
+        html+='<div class="task-done-badge">&#10003; Transfer abgeschlossen</div>';
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+
+  // Complete station button
+  if(ss.pflichtDone){
+    html+='<button class="btn-next show" id="complete-station">Zur nachsten Station &#8594;</button>';
+  }
+
+  return html;
+}
+
+// ── Render MC html ─────────────────────────────────────
+function renderMCHtml(task,key,si,lvlType){
+  var ss=getStnState(si);
+  var doneKey='done_'+key;
+  var done=ss[doneKey]||false;
+  var lc=lvlType==='p'?'lvl-p':(lvlType==='v'?'lvl-v':'lvl-t');
+  var opts='<div class="mc-wrap">';
+  for(var i=0;i<task.opts.length;i++){
+    var o=task.opts[i];
+    var cls=done?(o.ok?'ok':''):'';
+    var dis=done?'disabled':'';
+    opts+='<button class="mc-opt '+cls+'" '+dis+' data-key="'+key+'" data-si="'+si+'" data-oi="'+i+'" data-ok="'+(o.ok?1:0)+'">'+esc(o.t)+'</button>';
+  }
+  opts+='</div>';
+  var fbok=done?'<div class="fb ok show">'+esc(task.fok)+'</div>':'<div class="fb ok" id="fbok-'+key+'"></div>';
+  var fberr='<div class="fb err" id="fberr-'+key+'"></div>';
+  var tipp=task.tip?'<button class="tipp-btn" id="tbtn-'+key+'"><span>Tipp</span><span id="tarr-'+key+'">&#9660;</span></button><div class="tipp-box" id="tbox-'+key+'"><div class="tipp-lbl">Tipp</div>'+esc(task.tip)+'</div>':'';
+  return '<span class="lvl '+lc+'">'+esc(task.lbl||'')+'</span><p class="qtxt">'+esc(task.q)+'</p>'+opts+fbok+fberr+'<hr class="sep">'+tipp;
+}
+
+function renderMCHtmlIndexed(task,key,si,lvlType,done){
+  var lc=lvlType==='p'?'lvl-p':(lvlType==='v'?'lvl-v':'lvl-t');
+  var opts='<div class="mc-wrap">';
+  for(var i=0;i<task.opts.length;i++){
+    var o=task.opts[i];
+    var cls=done?(o.ok?'ok':''):'';
+    var dis=done?'disabled':'';
+    opts+='<button class="mc-opt '+cls+'" '+dis+' data-key="'+key+'" data-si="'+si+'" data-oi="'+i+'" data-ok="'+(o.ok?1:0)+'">'+esc(o.t)+'</button>';
+  }
+  opts+='</div>';
+  var fbok=done?'<div class="fb ok show">'+esc(task.fok)+'</div>':'<div class="fb ok" id="fbok-'+key+'"></div>';
+  var fberr='<div class="fb err" id="fberr-'+key+'"></div>';
+  return '<p class="qtxt">'+esc(task.q)+'</p>'+opts+fbok+fberr;
+}
+
+// ── Render Num html ────────────────────────────────────
+function renderNumHtml(task,key,si,lvlType){
+  var ss=getStnState(si);
+  var doneKey='done_'+key;
+  var done=ss[doneKey]||false;
+  var lc=lvlType==='p'?'lvl-p':(lvlType==='v'?'lvl-v':'lvl-t');
+  var ic=done?'ok':'', id2=done?'disabled':'', bd=done?'disabled':'';
+  var fbok=done?'<div class="fb ok show">'+esc(task.fok)+'</div>':'<div class="fb ok" id="fbok-'+key+'"></div>';
+  var fberr='<div class="fb err" id="fberr-'+key+'"></div>';
+  var t1=task.t1?'<button class="tipp-btn" id="tbtn-'+key+'-1"><span>Tipp 1</span><span id="tarr-'+key+'-1">&#9660;</span></button><div class="tipp-box" id="tbox-'+key+'-1"><div class="tipp-lbl">Tipp 1</div>'+esc(task.t1)+'</div>':'';
+  var t2=task.t2?'<button class="tipp-btn" id="tbtn-'+key+'-2"><span>Tipp 2</span><span id="tarr-'+key+'-2">&#9660;</span></button><div class="tipp-box" id="tbox-'+key+'-2"><div class="tipp-lbl">Tipp 2</div>'+esc(task.t2)+'</div>':'';
+  return '<span class="lvl '+lc+'">'+esc(task.lbl||'')+'</span><p class="qtxt">'+esc(task.q)+'</p>'
+    +'<div class="inp-row"><input class="num-inp '+ic+'" type="number" step="any" id="inp-'+key+'" placeholder="Antwort" '+id2+'/><span class="inp-unit">'+esc(task.unit)+'</span></div>'
+    +'<button class="btn-primary" id="chk-'+key+'" '+bd+'>Prufen</button>'
+    +fbok+fberr+'<hr class="sep">'+t1+t2;
+}
+
+// ── Check MC ───────────────────────────────────────────
+function checkMC(key,si,oi,ok){
+  var ss=getStnState(si);
+  var doneKey='done_'+key;
+  if(ss[doneKey])return;
+  var errKey='err_'+key;
+  if(!ss[errKey])ss[errKey]=0;
+  var task=findTask(si,key);
+  if(!task)return;
+  var fbok=document.getElementById('fbok-'+key),fberr=document.getElementById('fberr-'+key);
+  if(ok){
+    var btns=document.querySelectorAll('[data-key="'+key+'"]');
+    for(var i=0;i<btns.length;i++){
+      btns[i].disabled=true;
+      if(task.opts[i].ok)btns[i].classList.add('ok');
+      else btns[i].classList.remove('err');
+    }
+    if(fbok){fbok.textContent=task.fok;fbok.classList.add('show');}
+    if(fberr)fberr.classList.remove('show');
+    ss[doneKey]=true;
+    G.correct++;
+    checkBlockProgress(si,key);
+  } else {
+    ss[errKey]++;
+    var btns2=document.querySelectorAll('[data-key="'+key+'"]');
+    btns2[oi].classList.add('err');
+    setTimeout(function(){if(btns2[oi])btns2[oi].classList.remove('err');},800);
+    var msg=task.ferr;
+    if(ss[errKey]>=2)msg+=' (Versuch '+ss[errKey]+'/3)';
+    if(fberr){fberr.textContent=msg;fberr.classList.add('show');}
+    if(ss[errKey]>=3){
+      if(!document.getElementById('sol-'+key)){
+        var btn=document.createElement('button');
+        btn.id='sol-'+key;
+        btn.className='btn-primary';
+        btn.style.background='#7c3aed';
+        btn.style.marginTop='8px';
+        btn.textContent='Losung anzeigen und weitermachen';
+        btn.setAttribute('data-solkey',key);
+        btn.setAttribute('data-solsi',si);
+        if(fberr&&fberr.parentNode)fberr.parentNode.insertBefore(btn,fberr.nextSibling);
+      }
+    }
+  }
+}
+
+// ── Check Num ──────────────────────────────────────────
+function checkNum(key,si){
+  var ss=getStnState(si);
+  var doneKey='done_'+key;
+  if(ss[doneKey])return;
+  var inp=document.getElementById('inp-'+key);
+  if(!inp)return;
+  var val=parseFloat(inp.value.replace(',','.'));
+  if(isNaN(val))return;
+  var task=findTask(si,key);
+  if(!task)return;
+  var diff=Math.abs(val-task.ans);
+  var fbok=document.getElementById('fbok-'+key),fberr=document.getElementById('fberr-'+key);
+  if(fbok)fbok.classList.remove('show');
+  if(fberr)fberr.classList.remove('show');
+  inp.classList.remove('ok','err');
+  if(diff<=task.tol){
+    inp.classList.add('ok');inp.disabled=true;
+    var cb=document.getElementById('chk-'+key);if(cb)cb.disabled=true;
+    if(fbok){fbok.textContent=task.fok;fbok.classList.add('show');}
+    ss[doneKey]=true;G.correct++;
+    checkBlockProgress(si,key);
+  } else {
+    ss['err_'+key]=(ss['err_'+key]||0)+1;
+    inp.classList.add('err');
+    var msg2=task.ferr+(task.tol>0?' (+/-'+task.tol+')':'');
+    if(ss['err_'+key]>=2)msg2+=' (Versuch '+ss['err_'+key]+'/3)';
+    if(fberr){fberr.textContent=msg2;fberr.classList.add('show');}
+    setTimeout(function(){inp.classList.remove('err');},400);
+    if(ss['err_'+key]>=3){
+      if(!document.getElementById('sol-'+key)){
+        var sb=document.createElement('button');
+        sb.id='sol-'+key;
+        sb.className='btn-primary';
+        sb.style.background='#7c3aed';
+        sb.style.marginTop='8px';
+        sb.textContent='Losung anzeigen und weitermachen';
+        sb.setAttribute('data-solkey',key);
+        sb.setAttribute('data-solsi',si);
+        if(fberr&&fberr.parentNode)fberr.parentNode.insertBefore(sb,fberr.nextSibling);
+      }
+    }
+  }
+}
+
+// ── Find task by key ───────────────────────────────────
+function findTask(si,key){
+  var st=STATIONS[si];
+  if(!st)return null;
+  var parts=key.split('-');
+  var type=parts[0],idx=parseInt(parts[1]);
+  if(type==='p'&&st.pflicht[idx])return st.pflicht[idx];
+  if(type==='v'&&st.vertiefung[idx])return st.vertiefung[idx];
+  if(type==='t'&&st.transfer[idx])return st.transfer[idx];
+  if(type==='p0'&&st.pflicht[0])return st.pflicht[0];
+  return null;
+}
+
+// ── Show solution ─────────────────────────────────────
+function showSolution(key,si){
+  var ss=getStnState(si);
+  var doneKey='done_'+key;
+  if(ss[doneKey])return;
+  var task=findTask(si,key);
+  if(!task)return;
+  // Mark all correct options, disable buttons
+  var btns=document.querySelectorAll('[data-key="'+key+'"]');
+  for(var i=0;i<btns.length;i++){
+    btns[i].disabled=true;
+    if(task.opts&&task.opts[i]&&task.opts[i].ok)btns[i].classList.add('ok');
+  }
+  // For num: show answer
+  var inp=document.getElementById('inp-'+key);
+  if(inp){
+    inp.value=task.ans;
+    inp.classList.add('ok');
+    inp.disabled=true;
+    var cb=document.getElementById('chk-'+key);
+    if(cb)cb.disabled=true;
+  }
+  var fbok=document.getElementById('fbok-'+key);
+  var fberr=document.getElementById('fberr-'+key);
+  if(fberr)fberr.classList.remove('show');
+  if(fbok){
+    fbok.textContent='(Losung angezeigt) '+task.fok;
+    fbok.classList.add('show');
+  }
+  // Remove solution button
+  var solBtn=document.getElementById('sol-'+key);
+  if(solBtn)solBtn.parentNode.removeChild(solBtn);
+  ss[doneKey]=true;
+  // Don't count to G.correct since solution was shown
+  checkBlockProgress(si,key);
+}
+
+// ── Check block progress ───────────────────────────────
+function checkBlockProgress(si,key){
+  var ss=getStnState(si);
+  var st=STATIONS[si];
+  var type=key.split('-')[0];
+
+  if(st.isIntro){
+    // handled separately
+    return;
+  }
+
+  // Check if all pflicht tasks done
+  if(type==='p'){
+    var allP=true;
+    for(var i=0;i<st.pflicht.length;i++){
+      if(!ss['done_p-'+i]){allP=false;break;}
+    }
+    if(allP&&!ss.pflichtDone){
+      ss.pflichtDone=true;
+      // Re-render to unlock Vertiefung block
+      setTimeout(function(){renderStation(si,true);},400);
+      return;
+    }
+  }
+
+  // Check vertiefung
+  if(type==='v'){
+    var allV=true;
+    for(var j=0;j<st.vertiefung.length;j++){
+      if(!ss['done_v-'+j]){allV=false;break;}
+    }
+    if(allV&&!ss.vertiefDone){
+      ss.vertiefDone=true;
+      checkTransferUnlock(si);
+      // Re-render to unlock Transfer block (always show vertiefung complete)
+      setTimeout(function(){renderStation(si,true);},400);
+      return;
+    }
+  }
+
+  // Check transfer
+  if(type==='t'){
+    var allT=true;
+    for(var k=0;k<st.transfer.length;k++){
+      if(!ss['done_t-'+k]){allT=false;break;}
+    }
+    if(allT&&!ss.transferDone){
+      ss.transferDone=true;
+      setTimeout(function(){renderStation(si,true);},400);
+      return;
+    }
+  }
+}
+
+// ── Intro station logic ────────────────────────────────
+function handleInfoMC(key,si,oi,ok){
+  var ss=getStnState(si);
+  var st=STATIONS[si];
+  var mcIdx=ss.infoPhase-2;
+  var task=st.infoMC[mcIdx];
+  if(!task)return;
+
+  var fbok=document.getElementById('fbok-'+key),fberr=document.getElementById('fberr-'+key);
+  if(ok){
+    var btns=document.querySelectorAll('[data-key="'+key+'"]');
+    for(var i=0;i<btns.length;i++){
+      btns[i].disabled=true;
+      if(task.opts[i].ok)btns[i].classList.add('ok');
+    }
+    if(fbok){fbok.textContent=task.fok;fbok.classList.add('show');}
+    G.correct++;
+    // Advance to next MC or finish
+    var nextMC=mcIdx+1;
+    if(nextMC<st.infoMC.length){
+      ss.infoPhase=2+nextMC;
+      setTimeout(function(){renderStation(si,true);},600);
+    } else {
+      // All info MC done
+      ss.pflichtDone=true;
+      setTimeout(function(){renderStation(si,true);},600);
+    }
+  } else {
+    if(fberr){fberr.textContent=task.ferr;fberr.classList.add('show');}
+  }
+}
+
+// ── Event delegation ───────────────────────────────────
+document.addEventListener('click',function(e){
+  var el=e.target;
+
+  // Start button
+  if(el.id==='start-btn'){
+    showScreen('map-screen');
+    return;
+  }
+
+  // Map nodes
+  var sn=el.closest?el.closest('.snode'):null;
+  if(sn&&!sn.classList.contains('locked')){
+    var idx=parseInt(sn.getAttribute('data-idx'));
+    if(!isNaN(idx))openStation(idx);
+    return;
+  }
+
+  if(el.id==='back-btn'||el.closest('#back-btn')){showScreen('map-screen');updateMap();return;}
+  if(el.id==='restart-btn'||el.closest('#restart-btn')){restart();return;}
+
+  // MC option
+  if(el.classList.contains('mc-opt')&&!el.disabled){
+    var key=el.getAttribute('data-key');
+    var si2=parseInt(el.getAttribute('data-si'));
+    var oi=parseInt(el.getAttribute('data-oi'));
+    var ok=el.getAttribute('data-ok')==='1';
+    if(key&&key.indexOf('info-mc')===0){
+      handleInfoMC(key,si2,oi,ok);
+    } else if(key&&key==='p0-mc'){
+      // Initial MC for intro
+      checkMCIntroP0(si2,oi,ok);
+    } else {
+      checkMC(key,si2,oi,ok);
+    }
+    return;
+  }
+
+  // Solution button (after 3 wrong attempts)
+  if(el.getAttribute&&el.getAttribute('data-solkey')){
+    var solKey=el.getAttribute('data-solkey');
+    var solSi=parseInt(el.getAttribute('data-solsi'));
+    showSolution(solKey,solSi);
+    return;
+  }
+
+  // Num check buttons
+  if(el.id&&el.id.indexOf('chk-')===0){
+    var ckey=el.id.replace('chk-','');
+    checkNum(ckey,G.curS);
+    return;
+  }
+
+  // Submit freitext
+  if(el.id==='submit-freitext'){
+    var ta=document.getElementById('freitext-inp');
+    var txt=ta?ta.value.trim():'';
+    var ss2=getStnState(G.curS);
+    ss2.freitext=txt;
+    ss2.infoPhase=2;
+    renderStation(G.curS);
+    return;
+  }
+
+  // Complete station
+  if(el.id==='complete-station'){
+    completeStation(G.curS);return;
+  }
+
+  // Tipp
+  var tb=el.closest?el.closest('.tipp-btn'):null;
+  if(tb){
+    var tid=tb.id.replace('tbtn-','');
+    var box=document.getElementById('tbox-'+tid);
+    var arr=document.getElementById('tarr-'+tid);
+    if(box){
+      var wasOpen=box.classList.contains('open');
+      box.classList.toggle('open');
+      if(arr)arr.innerHTML=wasOpen?'&#9660;':'&#9650;';
+      if(!wasOpen)G.tipsUsed++;
+    }
+    return;
+  }
+});
+
+// Enter key
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var focused=document.activeElement;
+    if(focused&&focused.classList.contains('num-inp')){
+      var key=focused.id.replace('inp-','');
+      checkNum(key,G.curS);
+    }
+  }
+});
+
+// ── Intro P0 MC ────────────────────────────────────────
+function checkMCIntroP0(si,oi,ok){
+  var ss=getStnState(si);
+  var st=STATIONS[si];
+  var task=st.pflicht[0];
+  var btns=document.querySelectorAll('[data-key="p0-mc"]');
+  for(var i=0;i<btns.length;i++){
+    btns[i].disabled=true;
+    if(task.opts[i].ok)btns[i].classList.add('ok');
+    else if(i===oi&&!ok)btns[i].classList.add('err');
+  }
+  var fbok=document.getElementById('fbok-p0-mc'),fberr=document.getElementById('fberr-p0-mc');
+  if(ok){
+    G.correct++;
+    if(fbok){fbok.textContent=task.fok;fbok.classList.add('show');}
+    ss['done_p0-mc']=true;
+    // Show next button to infotext
+    setTimeout(function(){
+      ss.infoPhase=1;
+      renderStation(si);
+    },700);
+  } else {
+    if(fberr){fberr.textContent=task.ferr;fberr.classList.add('show');}
+  }
+}
+
+// ── Complete station ───────────────────────────────────
+function completeStation(si){
+  stopTimer(si);
+  if(G.completed.indexOf(si)<0)G.completed.push(si);
+  var ns=si+1;
+  if(G.unlocked.indexOf(ns)<0)G.unlocked.push(ns);
+  updateMap();
+  showScreen('map-screen');
+}
+
+// ── Done ───────────────────────────────────────────────
+function showDone(){
+  document.getElementById('ds-correct').textContent=G.correct;
+  document.getElementById('ds-tips').textContent=G.tipsUsed;
+  showScreen('done-screen');
+}
+
+// ── Restart ────────────────────────────────────────────
+function restart(){
+  G.unlocked=[0];G.completed=[];G.tipsUsed=0;G.correct=0;G.stnState={};G.timers={};
+  showScreen('start-screen');updateMap();
+}
+
+// ── Screen ─────────────────────────────────────────────
+function showScreen(id){
+  var all=['start-screen','map-screen','station-screen','done-screen'];
+  for(var i=0;i<all.length;i++){var el=document.getElementById(all[i]);if(el)el.classList.remove('active');}
+  var t=document.getElementById(id);if(t)t.classList.add('active');
+}
+
+// ── Escape ─────────────────────────────────────────────
+function esc(s){
+  if(!s)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Timer functions ───────────────────────────────────
+function startTimer(si){
+  var st=STATIONS[si];
+  if(!st||!st.timerSec)return;
+  if(G.timers[si])return;
+  G.timers[si]={started:Date.now(),elapsed:0,expired:false};
+  G.timers[si].interval=setInterval(function(){
+    if(!G.timers[si])return;
+    var elapsed=Math.floor((Date.now()-G.timers[si].started)/1000);
+    G.timers[si].elapsed=elapsed;
+    updateTimerBar(si,elapsed,st.timerSec);
+    if(elapsed>=st.timerSec&&!G.timers[si].expired){
+      G.timers[si].expired=true;
+      clearInterval(G.timers[si].interval);
+      updateTimerBar(si,st.timerSec,st.timerSec);
+    }
+  },500);
+}
+
+function stopTimer(si){
+  if(G.timers[si]&&G.timers[si].interval){
+    clearInterval(G.timers[si].interval);
+  }
+}
+
+function isTimerActive(si){
+  var st=STATIONS[si];
+  if(!st||!st.timerSec)return true;
+  if(!G.timers[si])return false;
+  return !G.timers[si].expired;
+}
+
+function updateTimerBar(si,elapsed,total){
+  var bar=document.getElementById('tbar-'+si);
+  if(!bar)return;
+  var pct=Math.max(0,Math.min(100,Math.round((1-(elapsed/total))*100)));
+  bar.style.width=pct+'%';
+  bar.className='timer-bar'+(pct>50?' ok':(pct>20?' warn':' danger'));
+}
+
+function checkTransferUnlock(si){
+  var ss=getStnState(si);
+  if(!ss.pflichtDone||!ss.vertiefDone)return;
+  if(!isTimerActive(si))return;
+  var ss2=getStnState(si);
+  if(ss2.transferUnlocked)return;
+  ss2.transferUnlocked=true;
+  setTimeout(function(){renderStation(si,true);},300);
+}
+
+// Init
+G.curS=0;
+updateMap();
+})();
+</script>
+</body>
+</html>
