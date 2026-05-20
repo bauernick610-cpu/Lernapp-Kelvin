@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Induktion · Übung</title>
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --bg-base: #0e1116;
+    --bg-elevated: #161b22;
+    --bg-card: #1c2128;
+    --bg-card-hover: #22282f;
+    --border: #2d333b;
+    --border-strong: #444c56;
+    --text-primary: #e6edf3;
+    --text-secondary: #9ba3af;
+    --text-muted: #6e7681;
+    --accent: #2f81f7;
+    --accent-hover: #4493f8;
+    --accent-dim: #1f4a8c;
+    --accent-bg: rgba(47, 129, 247, 0.1);
+    --success: #3fb950;
+    --success-bg: rgba(63, 185, 80, 0.12);
+    --warning: #d29922;
+    --warning-bg: rgba(210, 153, 34, 0.12);
+    --danger: #f85149;
+    --danger-bg: rgba(248, 81, 73, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+
+  .header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .header .subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Startbildschirm */
+  .start-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .start-card h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .start-card p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .info-box {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .info-box strong { color: var(--text-primary); }
+
+  /* Buttons */
+  .btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+
+  .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+  }
+
+  .btn-secondary:hover { background: var(--bg-card-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text-primary); border-color: var(--border-strong); }
+
+  /* Diagnose */
+  .diagnostic-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+  }
+
+  .timer-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+  }
+
+  .timer-fill.warning { background: var(--warning); }
+  .timer-fill.danger { background: var(--danger); }
+
+  .question-number {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+  }
+
+  .question-text {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .answer-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 14px 18px;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+
+  .answer-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+  }
+
+  /* Home */
+  .home-header {
+    margin-bottom: 24px;
+  }
+
+  .home-intro {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .areas-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .area-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .area-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+
+  .area-card.locked {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .area-card.locked:hover { transform: none; }
+
+  .area-status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--border);
+  }
+
+  .area-card[data-status="diagnosed-low"] .area-status-bar { background: var(--success); }
+  .area-card[data-status="diagnosed-mid"] .area-status-bar { background: var(--warning); }
+  .area-card[data-status="diagnosed-high"] .area-status-bar { background: var(--danger); }
+  .area-card[data-status="in-progress"] .area-status-bar { background: var(--accent); }
+  .area-card[data-status="complete"] .area-status-bar { background: var(--success); }
+
+  .area-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .area-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .area-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .area-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-low { background: var(--success-bg); color: var(--success); }
+  .badge-mid { background: var(--warning-bg); color: var(--warning); }
+  .badge-high { background: var(--danger-bg); color: var(--danger); }
+  .badge-progress { background: var(--accent-bg); color: var(--accent); }
+  .badge-complete { background: var(--success-bg); color: var(--success); }
+
+  .area-progress {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .progress-pill {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+
+  .progress-pill.done { background: var(--success); }
+  .progress-pill.current { background: var(--accent); }
+
+  .progress-labels {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .progress-labels span { flex: 1; text-align: center; }
+
+  /* Aufgabe */
+  .task-screen {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+  }
+
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .task-title {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .task-title strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .task-context {
+    background: var(--bg-elevated);
+    border-left: 3px solid var(--accent);
+    padding: 18px 20px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .task-question {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+  }
+
+  /* Step-Eingabe */
+  .step-container {
+    margin-bottom: 20px;
+  }
+
+  .step-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-label .step-num {
+    background: var(--accent-bg);
+    color: var(--accent);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .step-label.done .step-num {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  .step-prompt {
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+  }
+
+  .step-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .step-input {
+    flex: 1;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+
+  .step-input:focus {
+    border-color: var(--accent);
+    background: var(--bg-base);
+  }
+
+  .step-input.correct {
+    border-color: var(--success);
+    background: var(--success-bg);
+  }
+
+  .step-input.incorrect {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+  }
+
+  .step-feedback {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .step-feedback.show { display: block; }
+
+  .step-feedback.correct {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+  }
+
+  .step-feedback.incorrect {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+
+  /* Formel-Eingabe-Buttons */
+  .formula-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .formula-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+
+  .formula-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+  }
+
+  /* Live-Preview für Brüche */
+  .formula-preview {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-height: 28px;
+    display: none;
+  }
+
+  .formula-preview.show { display: block; }
+
+  .formula-preview-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 6px;
+  }
+
+  .formula-preview-content {
+    color: var(--text-primary);
+    font-size: 17px;
+    line-height: 1.4;
+  }
+
+  /* Given-List: einzelne Felder pro Größe */
+  .given-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .given-list { grid-template-columns: 1fr; }
+  }
+
+  .given-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    transition: all 0.15s ease;
+  }
+
+  .given-item.correct {
+    border-color: var(--success);
+    background: var(--success-bg);
+  }
+
+  .given-item.incorrect {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+  }
+
+  .given-input {
+    width: 100%;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+
+  .given-input:focus {
+    border-color: var(--accent);
+  }
+
+  .given-input:disabled {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    opacity: 1;
+  }
+
+  .given-toolbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .given-toolbar .formula-btn {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+
+  /* Hilfen */
+  .hints-container {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .hints-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+  }
+
+  .hints-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hint-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .hint-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+
+  .hint-trigger:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+
+  .hint-trigger .hint-num {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .hint-content {
+    padding: 0 16px 14px 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .hint-item.open .hint-content { display: block; }
+  .hint-item.hidden { display: none; }
+
+  /* Argumentation */
+  .arg-step {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .arg-step.locked { opacity: 0.5; pointer-events: none; }
+
+  .arg-step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .arg-step-num {
+    background: var(--accent-bg);
+    color: var(--accent);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .arg-step.done .arg-step-num {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  .arg-step-question {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .arg-textarea {
+    width: 100%;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+
+  .arg-textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .arg-textarea:disabled {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+  }
+
+  .arg-musterloesung {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .arg-musterloesung.show { display: block; }
+
+  .arg-musterloesung-label {
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .arg-musterloesung-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+
+  .arg-confirm {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .arg-confirm label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .arg-confirm input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  /* Selbsteinschätzung */
+  .self-eval {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 24px;
+  }
+
+  .self-eval h3 {
+    font-size: 15px;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  .self-eval-options {
+    display: flex;
+    gap: 10px;
+  }
+
+  .self-eval-btn {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+
+  .self-eval-btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
+
+  .self-eval-btn.selected { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+  /* Navigation */
+  .task-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Achievement Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--success);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--text-primary);
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+  }
+
+  .toast.show { transform: translateX(0); }
+
+  .toast-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--success-bg);
+    color: var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .toast-content strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  .toast-content span { color: var(--text-secondary); font-size: 13px; }
+
+  /* Variants-Liste */
+  .formula-display {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  /* Help-Banner */
+  .help-banner {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning);
+    color: var(--warning);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .app { padding: 20px 16px; }
+    .start-card, .diagnostic-card, .task-screen { padding: 24px 20px; }
+    .self-eval-options { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>Induktion</h1>
+    <div class="subtitle">Vorbereitung auf die Leistungskontrolle</div>
+  </div>
+
+  <!-- STARTBILDSCHIRM -->
+  <div class="screen active" id="screen-start">
+    <div class="start-card">
+      <h2>Willkommen zur Übungseinheit</h2>
+      <p>Du bereitest dich auf die Leistungskontrolle zum Thema Induktion vor. Diese App führt dich durch drei Bereiche mit jeweils einer Rechenaufgabe, einer Argumentationsaufgabe und einer weiteren Rechenaufgabe.</p>
+
+      <div class="info-box">
+        <strong>Selbstdiagnose zuerst.</strong> Sechs kurze Fragen helfen dir einzuschätzen, in welchem Bereich du den größten Übungsbedarf hast. Pro Frage hast du nur 15 bis 30 Sekunden. Antworte spontan, was dir einfällt.<br><br>
+        <strong>Hinweis zur Speicherung.</strong> Dein Fortschritt wird nur auf diesem Gerät gespeichert. Wenn du das Gerät wechselst, beginnt der Lernpfad von vorn.
+      </div>
+
+      <button class="btn" onclick="startDiagnostic()">Selbstdiagnose starten</button>
+    </div>
+  </div>
+
+  <!-- DIAGNOSE -->
+  <div class="screen" id="screen-diagnostic">
+    <div class="diagnostic-card">
+      <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+      </div>
+      <div class="question-number" id="question-number"></div>
+      <div class="question-text" id="question-text"></div>
+      <div class="answer-options" id="answer-options"></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen" id="screen-home">
+    <div class="home-header">
+      <div class="home-intro" id="home-intro"></div>
+    </div>
+    <div class="areas-grid" id="areas-grid"></div>
+  </div>
+
+  <!-- AUFGABE -->
+  <div class="screen" id="screen-task">
+    <div class="task-screen" id="task-screen-content"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-icon">✓</div>
+  <div class="toast-content">
+    <strong id="toast-title"></strong>
+    <span id="toast-message"></span>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATEN: Diagnose-Fragen
+// ============================================================
+const diagnosticQuestions = [
+  {
+    area: 1, type: 'knowledge', time: 18,
+    text: 'Eine rechteckige Spule wird mit konstanter Geschwindigkeit durch ein homogenes Magnetfeld geschoben. Sie tritt in das Feld ein und verlässt es wieder. Welche Größe ändert sich währenddessen?',
+    options: [
+      'Die magnetische Flussdichte $B$',
+      'Die wirksame Fläche $A$ der Spule',
+      'Die Windungszahl $N$ der Spule',
+      'Nichts ändert sich'
+    ],
+    correct: 1
+  },
+  {
+    area: 1, type: 'self', time: 15,
+    text: 'Wie sicher fühlst du dich, in einer Argumentationsaufgabe zu erklären, warum bei einer Anwendung mit rotierender Spule eine Spannung induziert wird und wie sich diese mit der Drehgeschwindigkeit ändert?',
+    options: ['Sicher', 'Teilweise sicher', 'Unsicher']
+  },
+  {
+    area: 2, type: 'knowledge', time: 18,
+    text: 'Durch eine Spule fließt ein Strom, der langsam erhöht wird. In einer benachbarten zweiten Spule wird eine Spannung gemessen. Welche Größe ist verantwortlich für diese induzierte Spannung in der zweiten Spule?',
+    options: [
+      'Die Windungszahl der zweiten Spule',
+      'Die wirksame Fläche der zweiten Spule',
+      'Die Änderung des Magnetfelds, das die zweite Spule durchsetzt',
+      'Die Bewegung der zweiten Spule'
+    ],
+    correct: 2
+  },
+  {
+    area: 2, type: 'self', time: 15,
+    text: 'Wie sicher fühlst du dich, in einer Argumentationsaufgabe zu erklären, wie ein veränderliches Magnetfeld in einer Anwendung wie einem Mikrofon oder Tonabnehmer eine Spannung erzeugt?',
+    options: ['Sicher', 'Teilweise sicher', 'Unsicher']
+  },
+  {
+    area: 3, type: 'knowledge', time: 30,
+    text: 'In einem Stromkreis mit einer Spule wird elektrische Energie aufgenommen und teilweise im Magnetfeld der Spule gespeichert. Welche Aussage trifft zu?',
+    options: [
+      'Die im Magnetfeld gespeicherte Energie geht verloren',
+      'Die im Magnetfeld gespeicherte Energie wird beim Abklingen des Stroms wieder an den Stromkreis abgegeben',
+      'Die Spule erzeugt zusätzliche Energie, die im Magnetfeld gespeichert wird',
+      'Die Energie wird vollständig in Wärme umgewandelt'
+    ],
+    correct: 1
+  },
+  {
+    area: 3, type: 'self', time: 15,
+    text: 'Wie sicher fühlst du dich, in einer Argumentationsaufgabe zu erklären, warum ein Transformator nicht mehr Energie abgeben kann, als er aufnimmt, und welche Rolle das Lenz\'sche Gesetz dabei spielt?',
+    options: ['Sicher', 'Teilweise sicher', 'Unsicher']
+  }
+];
+
+// ============================================================
+// DATEN: Aufgaben
+// ============================================================
+const tasks = {
+  // === BEREICH 1: Flächenänderung ===
+  '1-r1': {
+    area: 1, type: 'calc', title: 'Rechenaufgabe 1',
+    context: 'Eine rechteckige Leiterschleife mit $N = 100$ Windungen wird mit konstanter Geschwindigkeit aus einem homogenen Magnetfeld der Flussdichte $B = 0{,}3 \\text{ T}$ herausgezogen. Dabei verringert sich die wirksame Fläche um $\\Delta A = 0{,}01 \\text{ m}^2$. Der Vorgang dauert $\\Delta t = 0{,}2 \\text{ s}$.',
+    question: 'Berechne die in der Leiterschleife induzierte Spannung $U_{ind}$.',
+    steps: [
+      { prompt: 'Welche Größen sind gegeben? Trage jede Größe mit ihrer Einheit ein.', type: 'givenList', given: [
+          { symbol: 'N', expected: '100', unit: '' },
+          { symbol: 'B', expected: '0,3', unit: 'T' },
+          { symbol: 'ΔA', expected: '0,01', unit: 'm²' },
+          { symbol: 'Δt', expected: '0,2', unit: 's' }
+        ]
+      },
+      { prompt: 'Welche Größe ist gesucht?', type: 'text', answer: 'U_ind', check: 'gesucht' },
+      { prompt: 'Notiere die passende Formel.', type: 'formula', answer: 'U_ind = N · B · ΔA/Δt', check: 'formula1' },
+      { prompt: 'Setze die Werte mit Einheiten in die Formel ein.', type: 'text', answer: '100 · 0,3 T · 0,01 m² / 0,2 s', check: 'einsetzen1' },
+      { prompt: 'Berechne das Ergebnis mit Einheit.', type: 'text', answer: '1,5 V', check: 'result', expected: 1.5, unit: 'V' }
+    ],
+    hints: [
+      { stage: 1, text: 'Welche Größen ändern sich beim Herausziehen der Leiterschleife? Und welche bleibt konstant?' },
+      { stage: 2, text: 'Das Induktionsgesetz für eine Flächenänderung verbindet $U_{ind}$ mit $N$, $B$, $\\Delta A$ und $\\Delta t$. Welche dieser Größen sind in der Aufgabe gegeben?' },
+      { stage: 3, text: 'Die wirksame Fläche $A$ ändert sich um $\\Delta A$, während die magnetische Flussdichte $B$ konstant bleibt. Setze die gegebenen Werte sorgfältig in die Formel ein und achte auf die Einheiten.' }
+    ]
+  },
+  '1-arg': {
+    area: 1, type: 'arg', title: 'Argumentationsaufgabe',
+    context: 'Ein klassischer Seitenläufer-Fahrraddynamo erzeugt durch Rotation einer Leiterschleife in einem Magnetfeld eine Spannung, mit der die Fahrradlampe betrieben wird.',
+    question: 'Erkläre in einer kausalen Argumentationskette, wie im Fahrraddynamo eine Spannung induziert wird und warum die Lampe heller leuchtet, wenn man schneller fährt.',
+    argSteps: [
+      {
+        question: 'Was ist die Ursache der Spannung?',
+        muster: 'Die Drehung der Leiterschleife im Magnetfeld führt zu einer Änderung der wirksamen Fläche $A$, die von Magnetfeldlinien durchsetzt wird.',
+        keywords: [['fläche'], ['änder', 'ändert']]
+      },
+      {
+        question: 'Warum entsteht daraus eine Spannung?',
+        muster: 'Eine sich ändernde wirksame Fläche bei konstanter Flussdichte führt zu einer Änderung des magnetischen Flusses $\\Phi$. Nach dem Induktionsgesetz $U_{ind} = N \\cdot B \\cdot \\frac{\\Delta A}{\\Delta t}$ wird dadurch eine Spannung induziert.',
+        keywords: [['induktion', 'induziert', 'induktionsgesetz']]
+      },
+      {
+        question: 'Warum leuchtet die Lampe heller bei schnellerem Fahren?',
+        muster: 'Schnelleres Fahren bedeutet eine schnellere Rotation der Leiterschleife. Dadurch ändert sich die wirksame Fläche pro Zeit ($\\Delta A/\\Delta t$) schneller, was zu einer höheren Induktionsspannung führt.',
+        keywords: [['zeit', 'zeitlich']]
+      }
+    ],
+    hints: [
+      { stepIndex: 0, text: 'Im Fahrraddynamo dreht sich eine Leiterschleife im Magnetfeld. Überlege: Was an der Leiterschleife verändert sich durch die Drehung? Die Schleife selbst, das Magnetfeld, oder die Fläche, die das Magnetfeld durchsetzt?' },
+      { stepIndex: 2, text: 'Achte darauf, dass nicht die wirksame Fläche $A$ selbst größer wird, wenn du schneller fährst. Was ändert sich stattdessen am Verhältnis $\\Delta A/\\Delta t$?' },
+      { stepIndex: 2, text: 'Im Induktionsgesetz $U_{ind} = N \\cdot B \\cdot \\frac{\\Delta A}{\\Delta t}$ stehen $N$ und $B$ fest. Wenn du schneller fährst, ändert sich die wirksame Fläche in kürzerer Zeit. Wie wirkt sich das auf $\\frac{\\Delta A}{\\Delta t}$ aus?' }
+    ]
+  },
+  '1-vertief': {
+    area: 1, type: 'arg', title: 'Vertiefungsaufgabe',
+    isVertief: true,
+    context: 'In einer Wasserkraftanlage wird Wasser durch eine Turbine geleitet, die einen Generator antreibt. Im Generator rotiert eine Spule in einem Magnetfeld. Je stärker der Wasserdurchfluss ist, desto mehr elektrische Energie wird in das Stromnetz eingespeist.',
+    question: 'Schreibe in eigenen Worten eine vollständige kausale Argumentationskette: Wie entsteht im Generator der Wasserkraftanlage eine Spannung, und warum erzeugt ein stärkerer Wasserdurchfluss mehr elektrische Energie?',
+    argSteps: [
+      {
+        question: 'Schreibe deine vollständige Argumentationskette.',
+        muster: 'Der Wasserdurchfluss durch die Turbine sorgt dafür, dass die Spule im Generator rotiert. Bei der Rotation ändert sich die wirksame Fläche $A$ der Spule, die vom Magnetfeld durchsetzt wird, ständig. Eine sich ändernde wirksame Fläche bei konstanter Flussdichte führt nach dem Induktionsgesetz $U_{ind} = N \\cdot B \\cdot \\frac{\\Delta A}{\\Delta t}$ zu einer Induktionsspannung in der Spule. Diese Spannung treibt einen Strom an, der ins Netz eingespeist wird. Ein stärkerer Wasserdurchfluss bewirkt eine schnellere Rotation der Spule. Dadurch ändert sich die wirksame Fläche pro Zeit ($\\Delta A/\\Delta t$) schneller. Das führt zu einer höheren Induktionsspannung und damit zu mehr elektrischer Energie.'
+      }
+    ],
+    hints: []
+  },
+  '1-r2': {
+    area: 1, type: 'calc', title: 'Rechenaufgabe 2',
+    context: 'Im Generator einer Windkraftanlage rotiert eine Spule mit $N = 200$ Windungen und einer maximalen wirksamen Fläche von $A_0 = 250 \\text{ cm}^2$ in einem Magnetfeld der Flussdichte $B = 1{,}5 \\text{ T}$. Beim Drehen ändert sich die wirksame Fläche von $A_0$ auf $0$ in der Zeit $\\Delta t$. Es soll eine Induktionsspannung von $U_{ind} = 230 \\text{ V}$ erreicht werden.',
+    question: 'Berechne, in welcher Zeit $\\Delta t$ die Drehung erfolgen muss, damit diese Spannung induziert wird.',
+    steps: [
+      { prompt: 'Welche Größen sind gegeben? Trage jede Größe mit ihrer Einheit ein.', type: 'givenList', given: [
+          { symbol: 'N', expected: '200', unit: '' },
+          { symbol: 'B', expected: '1,5', unit: 'T' },
+          { symbol: 'ΔA', expected: '250', unit: 'cm²' },
+          { symbol: 'U_ind', expected: '230', unit: 'V' }
+        ]
+      },
+      { prompt: 'Welche Größe ist gesucht?', type: 'text', answer: 'Δt', check: 'gesucht_dt' },
+      { prompt: 'Stelle die Formel nach Δt um.', type: 'formula', answer: 'Δt = N · B · ΔA / U_ind', check: 'formula2' },
+      { prompt: 'Rechne die Fläche in m² um: $250 \\text{ cm}^2 = $ ?', type: 'text', answer: '0,025 m²', check: 'umrechnung1', expected: 0.025, unit: 'm²' },
+      { prompt: 'Setze die Werte mit Einheiten in die umgestellte Formel ein.', type: 'text', answer: '200 · 1,5 T · 0,025 m² / 230 V', check: 'einsetzen2' },
+      { prompt: 'Berechne das Ergebnis mit Einheit.', type: 'text', answer: '0,033 s', check: 'result', expected: 0.0326, unit: 's', tolerance: 0.005 }
+    ],
+    hints: [
+      { stage: 1, text: 'Welche Größe ist in dieser Aufgabe gesucht? Und welche Größen sind gegeben?' },
+      { stage: 2, text: 'Das Induktionsgesetz lautet $U_{ind} = N \\cdot B \\cdot \\frac{\\Delta A}{\\Delta t}$. Du suchst $\\Delta t$. Überlege, wie du die Formel umstellen musst, damit $\\Delta t$ allein auf einer Seite steht.' },
+      { stage: 3, text: 'Beim Umstellen nach $\\Delta t$: $\\Delta t$ steht im Nenner der Formel. Du musst zuerst beide Seiten mit $\\Delta t$ multiplizieren, dann durch $U_{ind}$ teilen.' }
+    ]
+  },
+
+  // === BEREICH 2: Magnetfeldänderung ===
+  '2-r1': {
+    area: 2, type: 'calc', title: 'Rechenaufgabe 1',
+    context: 'Eine kreisförmige Spule mit $N = 200$ Windungen und einer Fläche von $A = 0{,}008 \\text{ m}^2$ befindet sich in einem homogenen Magnetfeld. Die magnetische Flussdichte wird gleichmäßig von $B_1 = 0{,}1 \\text{ T}$ auf $B_2 = 0{,}5 \\text{ T}$ erhöht. Dieser Vorgang dauert $\\Delta t = 0{,}2 \\text{ s}$.',
+    question: 'Berechne die in der Spule induzierte Spannung $U_{ind}$.',
+    steps: [
+      { prompt: 'Welche Größen sind gegeben? Berechne auch ΔB aus B₁ und B₂.', type: 'givenList', given: [
+          { symbol: 'N', expected: '200', unit: '' },
+          { symbol: 'A', expected: '0,008', unit: 'm²' },
+          { symbol: 'ΔB', expected: '0,4', unit: 'T' },
+          { symbol: 'Δt', expected: '0,2', unit: 's' }
+        ]
+      },
+      { prompt: 'Welche Größe ist gesucht?', type: 'text', answer: 'U_ind', check: 'gesucht' },
+      { prompt: 'Notiere die passende Formel.', type: 'formula', answer: 'U_ind = N · ΔB/Δt · A', check: 'formula3' },
+      { prompt: 'Setze die Werte mit Einheiten in die Formel ein.', type: 'text', answer: '200 · 0,4 T / 0,2 s · 0,008 m²', check: 'einsetzen3' },
+      { prompt: 'Berechne das Ergebnis mit Einheit.', type: 'text', answer: '3,2 V', check: 'result', expected: 3.2, unit: 'V' }
+    ],
+    hints: [
+      { stage: 1, text: 'Was ändert sich in dieser Aufgabe? Die Fläche der Spule oder das Magnetfeld? Welche Form des Induktionsgesetzes ist hier passend?' },
+      { stage: 2, text: 'Die Spule hat eine konstante Fläche $A$, während sich das Magnetfeld von $B_1$ auf $B_2$ ändert. Welche Größe stellt die Magnetfeldänderung $\\Delta B$ dar?' },
+      { stage: 3, text: 'Die Magnetfeldänderung berechnet sich aus der Differenz: $\\Delta B = B_2 - B_1$. Setze diese Differenz dann in die Formel $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$ ein.' }
+    ]
+  },
+  '2-arg': {
+    area: 2, type: 'arg', title: 'Argumentationsaufgabe',
+    context: 'Ein dynamisches Mikrofon wandelt Schallwellen in ein elektrisches Signal um. Im Inneren des Mikrofons befindet sich eine dünne Membran, an der ein kleiner Magnet befestigt ist. Hinter dem Magnet ist eine feste Spule angebracht. Spricht eine Person ins Mikrofon, schwingt die Membran mit den Schallwellen, der Magnet bewegt sich mit. Am Ausgang der Spule entsteht ein elektrisches Signal, das später verstärkt und über Lautsprecher hörbar gemacht werden kann.',
+    question: 'Erkläre in einer kausalen Argumentationskette, wie im dynamischen Mikrofon aus Schallwellen ein elektrisches Signal entsteht.',
+    argSteps: [
+      {
+        question: 'Was passiert mit dem Magneten, wenn Schallwellen auf die Membran treffen?',
+        muster: 'Die Schallwellen versetzen die Membran in Schwingungen. Da der Magnet an der Membran befestigt ist, schwingt er mit den Schallwellen vor und zurück.',
+        keywords: [['beweg', 'schwing']]
+      },
+      {
+        question: 'Was bewirkt die Bewegung des Magneten in der Spule?',
+        muster: 'Durch die Bewegung des Magneten ändert sich das Magnetfeld, das die feste Spule durchsetzt. Bewegt sich der Magnet auf die Spule zu, wird das Magnetfeld stärker. Bewegt er sich weg, wird es schwächer. Es entsteht eine ständige Änderung des Magnetfelds in der Spule.',
+        keywords: [['magnetfeld'], ['änder', 'ändert']]
+      },
+      {
+        question: 'Wie entsteht daraus das elektrische Signal?',
+        muster: 'Nach dem Induktionsgesetz $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$ wird bei einer Magnetfeldänderung in der Spule eine Spannung induziert. Da das Magnetfeld sich im Rhythmus der Schallwellen ändert, entsteht eine Induktionsspannung, die genau den gleichen zeitlichen Verlauf hat wie die Schallwelle. Diese Spannung ist das elektrische Signal des Mikrofons.',
+        keywords: [['induktion', 'induziert', 'induktionsgesetz']]
+      }
+    ],
+    hints: [
+      { stepIndex: 0, text: 'Im Mikrofon befinden sich drei Komponenten: eine Membran, ein daran befestigter Magnet und eine feste Spule. Überlege: Welche dieser Komponenten bewegt sich, wenn Schallwellen auf das Mikrofon treffen?' },
+      { stepIndex: 2, text: 'Die Schallwellen bewegen den Magneten in einem bestimmten Rhythmus. Was bedeutet das für das Magnetfeld in der Spule? Verändert es sich willkürlich oder im gleichen Rhythmus wie die Schallwelle?' },
+      { stepIndex: 2, text: 'Wenn sich das Magnetfeld in der Spule im selben zeitlichen Verlauf ändert wie die Schallwelle, was bedeutet das nach dem Induktionsgesetz für die induzierte Spannung? Wie hängt der zeitliche Verlauf der Spannung mit dem der Schallwelle zusammen?' }
+    ]
+  },
+  '2-vertief': {
+    area: 2, type: 'arg', title: 'Vertiefungsaufgabe',
+    isVertief: true,
+    context: 'Ein modernes Smartphone wird über ein induktives Ladegerät aufgeladen. Im Ladegerät befindet sich eine Sendespule, durch die Wechselstrom fließt. Im Smartphone selbst befindet sich eine Empfangsspule. Wird das Smartphone auf das Ladegerät gelegt, wird der Akku geladen. Hebt man es ab, stoppt der Ladevorgang.',
+    question: 'Schreibe in eigenen Worten eine vollständige kausale Argumentationskette: Wie wird die Energie vom Ladegerät auf das Smartphone übertragen, ohne dass die beiden Geräte sich direkt berühren?',
+    argSteps: [
+      {
+        question: 'Schreibe deine vollständige Argumentationskette.',
+        muster: 'Durch die Sendespule im Ladegerät fließt ein Wechselstrom. Dieser erzeugt ein sich ständig änderndes Magnetfeld um die Spule. Wird das Smartphone mit seiner Empfangsspule nah an das Ladegerät gebracht, durchsetzt dieses sich ändernde Magnetfeld auch die Empfangsspule. Nach dem Induktionsgesetz $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$ wird in der Empfangsspule eine Spannung induziert, weil sich das Magnetfeld in ihr ändert. Diese Spannung treibt einen Strom an, der den Akku des Smartphones lädt. Hebt man das Smartphone vom Ladegerät ab, vergrößert sich der Abstand. Das Magnetfeld am Ort der Empfangsspule wird so schwach, dass keine merkliche Spannung mehr induziert wird. Der Ladevorgang stoppt.'
+      }
+    ],
+    hints: []
+  },
+  '2-r2': {
+    area: 2, type: 'calc', title: 'Rechenaufgabe 2',
+    context: 'Du baust einen neuen Tonabnehmer für eine E-Gitarre. Beim Anschlagen einer Saite ändert sich das Magnetfeld in der Tonabnehmer-Spule um $\\Delta B = 0{,}002 \\text{ T}$ in einer Zeit von $\\Delta t = 4 \\text{ ms}$. Die Spule hat eine Querschnittsfläche von $A = 0{,}8 \\text{ cm}^2$. Damit das Signal vom Verstärker gut verarbeitet werden kann, soll eine Induktionsspannung von $U_{ind} = 120 \\text{ mV}$ entstehen.',
+    question: 'Berechne, wie viele Windungen $N$ die Tonabnehmer-Spule haben muss.',
+    steps: [
+      { prompt: 'Welche Größen sind gegeben? Trage jede Größe mit ihrer Einheit ein.', type: 'givenList', given: [
+          { symbol: 'ΔB', expected: '0,002', unit: 'T' },
+          { symbol: 'Δt', expected: '4', unit: 'ms' },
+          { symbol: 'A', expected: '0,8', unit: 'cm²' },
+          { symbol: 'U_ind', expected: '120', unit: 'mV' }
+        ]
+      },
+      { prompt: 'Welche Größe ist gesucht?', type: 'text', answer: 'N', check: 'gesucht_n' },
+      { prompt: 'Stelle die Formel nach N um.', type: 'formula', answer: 'N = U_ind · Δt / (ΔB · A)', check: 'formula4' },
+      { prompt: 'Rechne A in m² und Δt in s und U_ind in V um.', type: 'text', answer: 'A=8·10⁻⁵ m², Δt=0,004 s, U_ind=0,12 V', check: 'umrechnung2' },
+      { prompt: 'Setze die Werte mit Einheiten ein.', type: 'text', answer: '0,12 V · 0,004 s / (0,002 T · 8·10⁻⁵ m²)', check: 'einsetzen4' },
+      { prompt: 'Berechne das Ergebnis.', type: 'text', answer: '3000', check: 'result', expected: 3000, unit: '', tolerance: 50 }
+    ],
+    hints: [
+      { stage: 1, text: 'Welche Größe ist in dieser Aufgabe gesucht? Welche Werte sind gegeben, und in welchen Einheiten?' },
+      { stage: 2, text: 'Das Induktionsgesetz lautet $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$. Du suchst $N$. Überlege, wie du die Formel umstellen musst, damit $N$ allein auf einer Seite steht.' },
+      { stage: 3, text: 'Beim Umstellen nach $N$: $N$ wird in der Formel mit anderen Größen multipliziert. Um $N$ zu isolieren, teile beide Seiten durch das Produkt aus $\\Delta B/\\Delta t$ und $A$.' }
+    ]
+  },
+
+  // === BEREICH 3: Lenz und Energieerhaltung ===
+  '3-r1': {
+    area: 3, type: 'calc', title: 'Rechenaufgabe 1',
+    context: 'In einem Klingeltrafo erzeugt die Primärspule im gemeinsamen Eisenkern ein sich änderndes Magnetfeld. Die Magnetfeldänderung beträgt $\\Delta B = 0{,}2 \\text{ T}$ in einer Zeit von $\\Delta t = 10 \\text{ ms}$. Die Sekundärspule hat $N_2 = 400$ Windungen und eine Querschnittsfläche von $A = 0{,}001 \\text{ m}^2$.',
+    question: 'Berechne die Sekundärspannung $U_2$, die an der Türklingel anliegt.',
+    steps: [
+      { prompt: 'Welche Größen sind gegeben? Trage jede Größe mit ihrer Einheit ein.', type: 'givenList', given: [
+          { symbol: 'N_2', expected: '400', unit: '' },
+          { symbol: 'A', expected: '0,001', unit: 'm²' },
+          { symbol: 'ΔB', expected: '0,2', unit: 'T' },
+          { symbol: 'Δt', expected: '10', unit: 'ms' }
+        ]
+      },
+      { prompt: 'Welche Größe ist gesucht?', type: 'text', answer: 'U_2', check: 'gesucht_u2' },
+      { prompt: 'Notiere die passende Formel.', type: 'formula', answer: 'U_2 = N_2 · ΔB/Δt · A', check: 'formula5' },
+      { prompt: 'Rechne Δt in s um.', type: 'text', answer: '0,01 s', check: 'umrechnung3', expected: 0.01, unit: 's' },
+      { prompt: 'Setze die Werte mit Einheiten ein.', type: 'text', answer: '400 · 0,2 T / 0,01 s · 0,001 m²', check: 'einsetzen5' },
+      { prompt: 'Berechne das Ergebnis mit Einheit.', type: 'text', answer: '8 V', check: 'result', expected: 8, unit: 'V' }
+    ],
+    hints: [
+      { stage: 1, text: 'In welcher Spule des Trafos wird die gesuchte Spannung induziert? Und welches Magnetfeld durchsetzt diese Spule?' },
+      { stage: 2, text: 'Die Primärspule erzeugt im Eisenkern ein sich änderndes Magnetfeld. Dieses durchsetzt auch die Sekundärspule. Welche Form des Induktionsgesetzes greift hier?' },
+      { stage: 3, text: 'Setze die gegebenen Werte in die Formel $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$ ein. Achte darauf, dass $N$ hier die Windungszahl der Sekundärspule meint, nicht der Primärspule.' }
+    ]
+  },
+  '3-arg': {
+    area: 3, type: 'arg', title: 'Argumentationsaufgabe',
+    context: 'Ein Hochspannungstransformator an einer Umspannstation transformiert die Spannung der überregionalen Stromleitungen von $110\\,000 \\text{ V}$ auf $230 \\text{ V}$ für die Haushalte. Eine Familie installiert in ihrem Haus einen neuen Verbraucher. Sobald dieser eingeschaltet wird, fließt durch die Sekundärspule des Trafos ein größerer Strom. Gleichzeitig steigt auch der Strom auf der Primärseite des Trafos in der Umspannstation, obwohl die beiden Spulen elektrisch nicht miteinander verbunden sind.',
+    question: 'Erkläre in einer kausalen Argumentationskette, wie der Transformator funktioniert und warum bei höherem Strom auf der Sekundärseite auch der Strom auf der Primärseite steigt, obwohl die beiden Spulen elektrisch nicht miteinander verbunden sind.',
+    argSteps: [
+      {
+        question: 'Wie entsteht im Trafo überhaupt eine Spannung auf der Sekundärseite?',
+        muster: 'An der Primärspule liegt eine Wechselspannung an. Diese erzeugt einen sich ständig ändernden Strom, der ein sich änderndes Magnetfeld in der Primärspule erzeugt. Über den gemeinsamen Eisenkern durchsetzt dieses sich ändernde Magnetfeld auch die Sekundärspule. Nach dem Induktionsgesetz $U_{ind} = N \\cdot \\frac{\\Delta \\Phi}{\\Delta t}$ wird in der Sekundärspule eine Spannung induziert.',
+        keywords: [['magnetfeld'], ['induktion', 'induziert', 'induktionsgesetz']]
+      },
+      {
+        question: 'Was passiert im Trafo, wenn auf der Sekundärseite ein größerer Strom fließt?',
+        muster: 'Der zusätzliche Strom in der Sekundärspule erzeugt selbst ein Magnetfeld. Nach dem Lenz\'schen Gesetz wirkt dieses Magnetfeld dem ursprünglichen Magnetfeld der Primärspule entgegen. Das gemeinsame Magnetfeld im Eisenkern wird dadurch geschwächt.',
+        keywords: [['lenz'], ['entgegen', 'entgegenwirk', 'gegen']]
+      },
+      {
+        question: 'Warum steigt dadurch der Strom auf der Primärseite?',
+        muster: 'Durch das geschwächte Magnetfeld wird die Gegenspannung in der Primärspule kleiner. Diese Gegenspannung hatte zuvor den Strom in der Primärspule begrenzt. Sinkt die Gegenspannung, kann mehr Strom durch die Primärspule fließen. Aus dem Stromnetz wird also automatisch mehr Energie nachgezogen.',
+        keywords: [['gegenspannung']]
+      },
+      {
+        question: 'Was sagt das über die Energieerhaltung beim Trafo aus?',
+        muster: 'Der Trafo erzeugt keine Energie. Die Energie, die auf der Sekundärseite entnommen wird, muss zwingend auch auf der Primärseite zugeführt werden. Das Magnetfeld im Eisenkern überträgt die Energie, ohne dass eine direkte elektrische Verbindung besteht. Ohne Verbraucher auf der Sekundärseite fließt kaum Energie. Der Trafo nimmt sich nur so viel, wie auf der anderen Seite gebraucht wird.',
+        keywords: [['energie'], ['übertrag', 'überträg', 'nicht erzeug', 'keine energie']]
+      }
+    ],
+    hints: [
+      { stepIndex: 1, text: 'Wenn auf der Sekundärseite ein zusätzlicher Verbraucher angeschlossen wird, fließt dort mehr Strom. Welcher Effekt entsteht durch diesen Strom in der Sekundärspule? Erinnere dich an das Lenz\'sche Gesetz.' },
+      { stepIndex: 2, text: 'Wenn das Magnetfeld im Eisenkern geschwächt wird, hat das eine Konsequenz für die Gegenspannung in der Primärspule. Was passiert mit dieser Gegenspannung, und wie wirkt sich das auf den Primärstrom aus?' },
+      { stepIndex: 3, text: 'Denke an den Energieerhaltungssatz: Energie kann nicht aus dem Nichts entstehen. Wenn auf der Sekundärseite Energie entnommen wird, woher muss diese kommen?' }
+    ]
+  },
+  '3-vertief': {
+    area: 3, type: 'arg', title: 'Vertiefungsaufgabe',
+    isVertief: true,
+    context: 'In einem Haushalt sind zwei verschiedene Geräte über denselben Klingeltrafo angeschlossen, die Türklingel und ein kleiner Niederspannungs-LED-Streifen. Beide werden gleichzeitig benutzt. Der Sicherungskasten zeigt einen deutlich höheren Strom als zuvor, als nur die Klingel genutzt wurde.',
+    question: 'Schreibe in eigenen Worten eine vollständige kausale Argumentationskette: Warum steigt der Strom auf der Primärseite des Trafos, wenn auf der Sekundärseite zusätzliche Geräte angeschlossen werden, und was bedeutet das für die Energie?',
+    argSteps: [
+      {
+        question: 'Schreibe deine vollständige Argumentationskette.',
+        muster: 'Wenn zusätzliche Geräte auf der Sekundärseite angeschlossen werden, fließt mehr Strom durch die Sekundärspule. Dieser zusätzliche Strom erzeugt nach dem Lenz\'schen Gesetz ein Magnetfeld, das dem ursprünglichen Magnetfeld der Primärspule entgegenwirkt. Das gemeinsame Magnetfeld im Eisenkern wird dadurch geschwächt. Durch das geschwächte Magnetfeld sinkt die Gegenspannung in der Primärspule. Diese Gegenspannung hatte zuvor den Strom in der Primärspule begrenzt. Wird sie kleiner, fließt automatisch mehr Strom durch die Primärspule. Das bedeutet für die Energie: Die Energie, die auf der Sekundärseite zusätzlich entnommen wird, wird auf der Primärseite zwingend nachgeliefert. Der Trafo erzeugt keine Energie aus dem Nichts. Er überträgt sie nur.'
+      }
+    ],
+    hints: []
+  },
+  '3-r2': {
+    area: 3, type: 'calc', title: 'Rechenaufgabe 2',
+    context: 'Ein Verteilnetztransformator transformiert die Mittelspannung des Stromnetzes von $U_1 = 10 \\text{ kV}$ auf $U_2 = 230 \\text{ V}$ für ein Wohngebiet. Im gemeinsamen Eisenkern erzeugt die Primärspule eine Magnetfeldänderung von $\\Delta B = 0{,}5 \\text{ T}$ in einer Zeit von $\\Delta t = 6 \\text{ ms}$. Der Eisenkern hat eine Querschnittsfläche von $A = 200 \\text{ cm}^2$. Die Primärspule besitzt $N_1 = 6000$ Windungen.',
+    question: 'a) Berechne mithilfe des Induktionsgesetzes, wie viele Windungen $N_2$ die Sekundärspule haben muss. b) Überprüfe dein Ergebnis mithilfe der Trafogleichung $\\frac{U_1}{U_2} = \\frac{N_1}{N_2}$.',
+    steps: [
+      { prompt: 'a) Welche Größen sind gegeben (für die Berechnung mit dem Induktionsgesetz)?', type: 'givenList', given: [
+          { symbol: 'U_2', expected: '230', unit: 'V' },
+          { symbol: 'ΔB', expected: '0,5', unit: 'T' },
+          { symbol: 'Δt', expected: '6', unit: 'ms' },
+          { symbol: 'A', expected: '200', unit: 'cm²' }
+        ]
+      },
+      { prompt: 'a) Welche Größe ist gesucht?', type: 'text', answer: 'N_2', check: 'gesucht_n2' },
+      { prompt: 'a) Stelle die Formel nach N_2 um.', type: 'formula', answer: 'N_2 = U_2 · Δt / (ΔB · A)', check: 'formula6' },
+      { prompt: 'a) Rechne A in m² und Δt in s um.', type: 'text', answer: 'A=0,02 m², Δt=0,006 s', check: 'umrechnung4' },
+      { prompt: 'a) Setze die Werte ein.', type: 'text', answer: '230 V · 0,006 s / (0,5 T · 0,02 m²)', check: 'einsetzen6' },
+      { prompt: 'a) Berechne das Ergebnis.', type: 'text', answer: '138', check: 'result', expected: 138, unit: '', tolerance: 3 },
+      { prompt: 'b) Überprüfe mit der Trafogleichung: N_2 = N_1 · U_2 / U_1. Berechne das Ergebnis.', type: 'text', answer: '138', check: 'result', expected: 138, unit: '', tolerance: 3 }
+    ],
+    hints: [
+      { stage: 1, text: 'Diese Aufgabe hat zwei Teile. Konzentriere dich zunächst nur auf Aufgabe a). Die Berechnung der Windungszahl $N_2$ mit dem Induktionsgesetz.' },
+      { stage: 2, text: 'Stelle das Induktionsgesetz $U_{ind} = N \\cdot \\frac{\\Delta B}{\\Delta t} \\cdot A$ nach $N$ um. Achte dabei darauf, in welchen Einheiten die gegebenen Werte vorliegen.' },
+      { stage: 3, text: 'Beim Umstellen nach $N$: $N$ wird in der Formel mit anderen Größen multipliziert. Teile beide Seiten durch das Produkt aus $\\Delta B/\\Delta t$ und $A$. Für die Überprüfung in Aufgabe b) nutze dann die Trafogleichung $\\frac{U_1}{U_2} = \\frac{N_1}{N_2}$.' }
+    ]
+  }
+};
+
+// Reihenfolge in jedem Bereich
+const taskOrder = {
+  1: ['1-r1', '1-arg', '1-r2'],
+  2: ['2-r1', '2-arg', '2-r2'],
+  3: ['3-r1', '3-arg', '3-r2']
+};
+
+const areaInfo = {
+  1: { title: 'Bereich 1', subtitle: 'Induktion durch Flächenänderung' },
+  2: { title: 'Bereich 2', subtitle: 'Induktion durch Magnetfeldänderung' },
+  3: { title: 'Bereich 3', subtitle: 'Lenz und Energieerhaltung' }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  diagnosticResults: { 1: [], 2: [], 3: [] },
+  currentDiagnosticIndex: 0,
+  diagnosticTimer: null,
+  diagnosticTimeLeft: 0,
+  areaProgress: { 1: { current: 0, completed: [] }, 2: { current: 0, completed: [] }, 3: { current: 0, completed: [] } },
+  vertiefRecommended: { 1: false, 2: false, 3: false },
+  vertiefCompleted: { 1: false, 2: false, 3: false },
+  currentTask: null,
+  currentArea: null,
+  currentStep: 0,
+  argStepsDone: [],
+  argStepsConfirmed: [],
+  hintsRevealed: [],
+  argHintsHidden: [],
+  lockedArea: null
+};
+
+// localStorage
+function saveState() {
+  try { localStorage.setItem('induktion-app-state', JSON.stringify(state)); } catch (e) {}
+}
+function loadState() {
+  try {
+    const saved = localStorage.getItem('induktion-app-state');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch (e) {}
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// DIAGNOSE
+// ============================================================
+function startDiagnostic() {
+  state.currentDiagnosticIndex = 0;
+  state.diagnosticResults = { 1: [], 2: [], 3: [] };
+  showScreen('screen-diagnostic');
+  showDiagnosticQuestion();
+}
+
+function showDiagnosticQuestion() {
+  const q = diagnosticQuestions[state.currentDiagnosticIndex];
+  document.getElementById('question-number').textContent =
+    `Frage ${state.currentDiagnosticIndex + 1} von ${diagnosticQuestions.length}`;
+  document.getElementById('question-text').innerHTML = q.text;
+
+  const optsContainer = document.getElementById('answer-options');
+  optsContainer.innerHTML = '';
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = opt;
+    btn.onclick = () => answerDiagnostic(idx);
+    optsContainer.appendChild(btn);
+  });
+
+  // Timer
+  state.diagnosticTimeLeft = q.time * 10; // in 100ms-Schritten
+  updateTimerBar(state.diagnosticTimeLeft, q.time * 10);
+  if (state.diagnosticTimer) clearInterval(state.diagnosticTimer);
+  state.diagnosticTimer = setInterval(() => {
+    state.diagnosticTimeLeft--;
+    updateTimerBar(state.diagnosticTimeLeft, q.time * 10);
+    if (state.diagnosticTimeLeft <= 0) {
+      clearInterval(state.diagnosticTimer);
+      answerDiagnostic(-1); // Zeit abgelaufen
+    }
+  }, 100);
+
+  // MathJax
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('screen-diagnostic')]);
+}
+
+function updateTimerBar(left, total) {
+  const fill = document.getElementById('timer-fill');
+  const pct = (left / total) * 100;
+  fill.style.width = pct + '%';
+  fill.classList.remove('warning', 'danger');
+  if (pct < 30) fill.classList.add('danger');
+  else if (pct < 60) fill.classList.add('warning');
+}
+
+function answerDiagnostic(idx) {
+  if (state.diagnosticTimer) clearInterval(state.diagnosticTimer);
+  const q = diagnosticQuestions[state.currentDiagnosticIndex];
+
+  let result;
+  if (idx === -1) {
+    result = 'unsicher'; // Zeit abgelaufen
+  } else if (q.type === 'knowledge') {
+    result = (idx === q.correct) ? 'sicher' : 'unsicher';
+  } else {
+    if (idx === 0) result = 'sicher';
+    else if (idx === 1) result = 'teilweise';
+    else result = 'unsicher';
+  }
+
+  state.diagnosticResults[q.area].push(result);
+
+  state.currentDiagnosticIndex++;
+  if (state.currentDiagnosticIndex >= diagnosticQuestions.length) {
+    finishDiagnostic();
+  } else {
+    showDiagnosticQuestion();
+  }
+}
+
+function finishDiagnostic() {
+  saveState();
+  showHome();
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function getAreaStatus(area) {
+  // Wenn schon Aufgaben absolviert wurden in diesem Bereich
+  if (state.areaProgress[area].completed.length === taskOrder[area].length) {
+    return { key: 'complete', label: 'Abgeschlossen', cls: 'badge-complete' };
+  }
+  if (state.areaProgress[area].completed.length > 0) {
+    return { key: 'in-progress', label: 'In Bearbeitung', cls: 'badge-progress' };
+  }
+  // Sonst aus Diagnose
+  const results = state.diagnosticResults[area];
+  if (!results || results.length === 0) {
+    return { key: 'diagnosed-mid', label: 'Mittel', cls: 'badge-mid' };
+  }
+  let unsicher = results.filter(r => r === 'unsicher').length;
+  let teilweise = results.filter(r => r === 'teilweise').length;
+
+  if (unsicher >= 2) return { key: 'diagnosed-high', label: 'Hoher Bedarf', cls: 'badge-high' };
+  if (unsicher === 1 || teilweise >= 1) return { key: 'diagnosed-mid', label: 'Teilweise sicher', cls: 'badge-mid' };
+  return { key: 'diagnosed-low', label: 'Sicher', cls: 'badge-low' };
+}
+
+function showHome() {
+  showScreen('screen-home');
+  document.getElementById('home-intro').textContent =
+    'Wähle einen Bereich. Innerhalb jedes Bereichs arbeitest du die Aufgaben in der vorgegebenen Reihenfolge. Ein begonnener Bereich muss abgeschlossen werden, bevor du wechseln kannst.';
+
+  const grid = document.getElementById('areas-grid');
+  grid.innerHTML = '';
+
+  [1, 2, 3].forEach(area => {
+    const status = getAreaStatus(area);
+    const progress = state.areaProgress[area];
+    const card = document.createElement('div');
+    card.className = 'area-card';
+    card.dataset.status = status.key;
+
+    // Locked, wenn anderer Bereich gerade in Bearbeitung ist
+    const isLocked = state.lockedArea !== null && state.lockedArea !== area;
+    if (isLocked) card.classList.add('locked');
+
+    const orderList = taskOrder[area];
+
+    card.innerHTML = `
+      <div class="area-status-bar"></div>
+      <div class="area-header">
+        <div>
+          <div class="area-title">${areaInfo[area].title}</div>
+          <div class="area-subtitle">${areaInfo[area].subtitle}</div>
+        </div>
+        <div class="area-badge ${status.cls}">${status.label}</div>
+      </div>
+      <div class="area-progress">
+        ${orderList.map((tid, idx) => {
+          let cls = '';
+          if (progress.completed.includes(tid)) cls = 'done';
+          else if (idx === progress.current) cls = 'current';
+          return `<div class="progress-pill ${cls}"></div>`;
+        }).join('')}
+      </div>
+      <div class="progress-labels">
+        <span>Rechnen 1</span>
+        <span>Argumentation</span>
+        <span>Rechnen 2</span>
+      </div>
+    `;
+
+    if (!isLocked) {
+      card.onclick = () => enterArea(area);
+    }
+
+    grid.appendChild(card);
+  });
+
+  // Reset-Button unten anzeigen
+  const existingReset = document.getElementById('reset-container');
+  if (existingReset) existingReset.remove();
+  const resetDiv = document.createElement('div');
+  resetDiv.id = 'reset-container';
+  resetDiv.style.cssText = 'margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;';
+  resetDiv.innerHTML = `<button class="btn-ghost" onclick="resetApp()">Fortschritt zurücksetzen</button>`;
+  document.getElementById('screen-home').appendChild(resetDiv);
+}
+
+function resetApp() {
+  if (!confirm('Möchtest du wirklich deinen gesamten Fortschritt zurücksetzen? Alle deine bisherigen Antworten und Selbstdiagnosen werden gelöscht.')) return;
+  try { localStorage.removeItem('induktion-app-state'); } catch (e) {}
+  state = {
+    diagnosticResults: { 1: [], 2: [], 3: [] },
+    currentDiagnosticIndex: 0,
+    diagnosticTimer: null,
+    diagnosticTimeLeft: 0,
+    areaProgress: { 1: { current: 0, completed: [] }, 2: { current: 0, completed: [] }, 3: { current: 0, completed: [] } },
+    vertiefRecommended: { 1: false, 2: false, 3: false },
+    vertiefCompleted: { 1: false, 2: false, 3: false },
+    currentTask: null,
+    currentArea: null,
+    currentStep: 0,
+    argStepsDone: [],
+    argStepsConfirmed: [],
+    hintsRevealed: [],
+    argHintsHidden: [],
+    lockedArea: null
+  };
+  showScreen('screen-start');
+}
+
+function enterArea(area) {
+  state.currentArea = area;
+  state.lockedArea = area;
+  saveState();
+
+  const progress = state.areaProgress[area];
+  if (progress.completed.length === taskOrder[area].length) {
+    // Bereich schon komplett, einfach zurück
+    state.lockedArea = null;
+    saveState();
+    showHome();
+    return;
+  }
+
+  const nextTaskId = taskOrder[area][progress.current];
+  loadTask(nextTaskId);
+}
+
+// ============================================================
+// AUFGABE LADEN
+// ============================================================
+function loadTask(taskId) {
+  state.currentTask = taskId;
+  state.currentStep = 0;
+  state.argStepsDone = [];
+  state.argStepsConfirmed = [];
+  state.hintsRevealed = [];
+  state.argHintsHidden = [];
+  saveState();
+  renderTask();
+}
+
+function renderTask() {
+  const task = tasks[state.currentTask];
+  const container = document.getElementById('task-screen-content');
+
+  if (task.type === 'calc') {
+    renderCalcTask(task, container);
+  } else if (task.type === 'arg') {
+    renderArgTask(task, container);
+  }
+
+  showScreen('screen-task');
+  if (window.MathJax) MathJax.typesetPromise([container]);
+}
+
+function renderCalcTask(task, container) {
+  const areaLabel = areaInfo[task.area].title;
+  container.innerHTML = `
+    <div class="task-header">
+      <div class="task-title"><strong>${areaLabel}</strong> · ${task.title}</div>
+      <button class="btn-ghost" onclick="exitTask()">Zurück</button>
+    </div>
+    <div class="task-context">${task.context}</div>
+    <div class="task-question">${task.question}</div>
+    <div id="steps-container"></div>
+    <div class="hints-container">
+      <div class="hints-label">Hilfen</div>
+      <div class="hints-list" id="hints-list"></div>
+    </div>
+    <div class="help-banner" id="help-banner" style="display: none;">
+      <strong>Brauchst du Unterstützung?</strong> Drehe deine rote Karte um, damit die Lehrperson zu dir kommt.
+    </div>
+  `;
+
+  renderStep(task);
+  renderHints(task);
+}
+
+function renderStep(task) {
+  const container = document.getElementById('steps-container');
+  // Alle bereits gelösten Steps anzeigen
+  let html = '';
+  for (let i = 0; i <= state.currentStep && i < task.steps.length; i++) {
+    const step = task.steps[i];
+    const done = i < state.currentStep;
+    const isGivenList = step.type === 'givenList';
+
+    html += `
+      <div class="step-container">
+        <div class="step-label ${done ? 'done' : ''}">
+          <span class="step-num">${done ? '✓' : (i + 1)}</span>
+          <span>Schritt ${i + 1}</span>
+        </div>
+        <div class="step-prompt">${step.prompt}</div>
+    `;
+
+    if (isGivenList) {
+      // GivenList: pro Größe EIN einziges Eingabefeld
+      if (!done) {
+        html += `
+          <div class="given-toolbar">
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbolGiven(${i}, 'Δ')">Δ</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbolGiven(${i}, '·')">·</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbolGiven(${i}, '²')">²</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbolGiven(${i}, '³')">³</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbolGiven(${i}, '⁻')">⁻ (für 10⁻⁵)</button>
+          </div>
+          <div class="given-list" id="given-list-${i}">
+            ${step.given.map((g, gIdx) => `
+              <div class="given-item" id="given-item-${i}-${gIdx}">
+                <input type="text" class="given-input" id="given-input-${i}-${gIdx}" placeholder="">
+              </div>
+            `).join('')}
+          </div>
+          <button class="btn" onclick="checkGivenList(${i})">Prüfen</button>
+        `;
+      } else {
+        // Gelöste givenList: alle Werte anzeigen
+        html += `
+          <div class="given-list">
+            ${step.given.map(g => `
+              <div class="given-item correct">
+                <input type="text" class="given-input" disabled value="${g.symbol} = ${g.expected}${g.unit ? ' ' + g.unit : ''}">
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    } else {
+      // Normaler Step (Text/Formel)
+      html += `
+        ${!done ? `
+          <div class="formula-buttons">
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbol('step-input-${i}', '()/()')">Bruch</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbol('step-input-${i}', 'Δ')">Δ</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbol('step-input-${i}', '·')">·</button>
+            <button class="formula-btn" onmousedown="event.preventDefault()" onclick="insertSymbol('step-input-${i}', '²')">²</button>
+          </div>
+        ` : ''}
+        ${done ? `
+          <div class="formula-preview show" style="margin-top: 0; margin-bottom: 8px;">
+            <div class="formula-preview-label">Deine Antwort</div>
+            <div class="formula-preview-content" id="done-preview-${i}"></div>
+          </div>
+        ` : `
+          <div class="step-input-wrap">
+            <input type="text" class="step-input" id="step-input-${i}" value="" placeholder="Antwort eingeben..." oninput="updatePreview(${i})">
+            <button class="btn" onclick="checkStep(${i})">Prüfen</button>
+          </div>
+          <div class="formula-preview" id="preview-${i}">
+            <div class="formula-preview-label">Vorschau</div>
+            <div class="formula-preview-content" id="preview-content-${i}"></div>
+          </div>
+        `}
+      `;
+    }
+
+    html += `
+        <div class="step-feedback" id="step-feedback-${i}"></div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+
+  // Done-Steps (Text/Formel): formatierte Antworten rendern
+  for (let i = 0; i < state.currentStep && i < task.steps.length; i++) {
+    const step = task.steps[i];
+    if (step.type === 'givenList') continue;
+    const answerStr = formatAnswer(step.answer);
+    const donePreview = document.getElementById('done-preview-' + i);
+    if (donePreview) {
+      donePreview.innerHTML = `\\(${textToMath(answerStr)}\\)`;
+    }
+  }
+
+  if (window.MathJax) MathJax.typesetPromise([container]).catch(() => {});
+}
+
+function formatAnswer(ans) {
+  if (Array.isArray(ans)) return ans.join(', ');
+  return ans;
+}
+
+function insertSymbol(inputId, symbol) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+
+  if (symbol === '()/()') {
+    // Spezieller Bruch-Einfüger: Cursor in den Zähler
+    const before = input.value.substring(0, start);
+    const after = input.value.substring(end);
+    input.value = before + '()/()' + after;
+    input.focus();
+    // Cursor zwischen den ersten Klammern positionieren
+    const newPos = start + 1;
+    input.setSelectionRange(newPos, newPos);
+  } else {
+    input.value = input.value.substring(0, start) + symbol + input.value.substring(end);
+    input.focus();
+    input.setSelectionRange(start + symbol.length, start + symbol.length);
+  }
+
+  // Preview aktualisieren
+  const stepIdx = inputId.replace('step-input-', '');
+  updatePreview(stepIdx);
+}
+
+// Merkt sich das zuletzt fokussierte given-input
+let lastFocusedGivenInput = null;
+
+document.addEventListener('focusin', (e) => {
+  if (e.target.classList && e.target.classList.contains('given-input') && !e.target.disabled) {
+    lastFocusedGivenInput = e.target;
+  }
+});
+
+function insertSymbolGiven(stepIdx, symbol) {
+  const list = document.getElementById('given-list-' + stepIdx);
+  if (!list) return;
+
+  // Nutze das zuletzt fokussierte Feld, falls es zu dieser Liste gehört
+  let activeInput = lastFocusedGivenInput;
+  if (!activeInput || !list.contains(activeInput) || activeInput.disabled) {
+    // Fallback: erstes leeres oder erstes Feld
+    const inputs = list.querySelectorAll('.given-input');
+    activeInput = Array.from(inputs).find(inp => !inp.value && !inp.disabled) || inputs[0];
+  }
+  if (!activeInput) return;
+
+  const start = activeInput.selectionStart ?? activeInput.value.length;
+  const end = activeInput.selectionEnd ?? activeInput.value.length;
+  activeInput.value = activeInput.value.substring(0, start) + symbol + activeInput.value.substring(end);
+  activeInput.focus();
+  const newPos = start + symbol.length;
+  activeInput.setSelectionRange(newPos, newPos);
+  lastFocusedGivenInput = activeInput;
+}
+
+function checkGivenList(stepIdx) {
+  const task = tasks[state.currentTask];
+  const step = task.steps[stepIdx];
+  const feedback = document.getElementById('step-feedback-' + stepIdx);
+
+  // Sammle alle Eingaben
+  const userEntries = [];
+  step.given.forEach((g, gIdx) => {
+    const input = document.getElementById('given-input-' + stepIdx + '-' + gIdx);
+    const val = input.value.trim();
+    const parsed = parseGivenEntry(val);
+    userEntries.push({ idx: gIdx, raw: val, sym: parsed.symbol, valueWithUnit: parsed.value });
+  });
+
+  // Versuche, jede Soll-Größe einem User-Eintrag zuzuordnen (flexible Reihenfolge)
+  const expectedList = step.given.slice();
+  const assignments = {}; // userIdx -> expectedIdx
+  const usedExpected = new Set();
+
+  userEntries.forEach(entry => {
+    if (!entry.sym) return;
+    for (let eIdx = 0; eIdx < expectedList.length; eIdx++) {
+      if (usedExpected.has(eIdx)) continue;
+      if (symbolsMatch(entry.sym, expectedList[eIdx].symbol)) {
+        assignments[entry.idx] = eIdx;
+        usedExpected.add(eIdx);
+        break;
+      }
+    }
+  });
+
+  let allCorrect = true;
+  const issues = [];
+
+  userEntries.forEach(entry => {
+    const item = document.getElementById('given-item-' + stepIdx + '-' + entry.idx);
+    item.classList.remove('correct', 'incorrect');
+
+    if (!entry.raw) {
+      item.classList.add('incorrect');
+      allCorrect = false;
+      if (!issues.includes('Ein Feld ist leer.')) issues.push('Ein Feld ist leer.');
+      return;
+    }
+
+    if (!entry.sym || !entry.valueWithUnit) {
+      item.classList.add('incorrect');
+      allCorrect = false;
+      issues.push(`„${entry.raw}" ist unvollständig. Trage Symbol und Wert ein, z.B. N = 100.`);
+      return;
+    }
+
+    const eIdx = assignments[entry.idx];
+    if (eIdx === undefined) {
+      item.classList.add('incorrect');
+      allCorrect = false;
+      issues.push(`Das Symbol „${entry.sym}" passt zu keiner gegebenen Größe.`);
+      return;
+    }
+
+    const expected = expectedList[eIdx];
+    const valOK = validateGivenValue(entry.valueWithUnit, expected);
+    if (!valOK) {
+      item.classList.add('incorrect');
+      allCorrect = false;
+      issues.push(`Bei ${expected.symbol} stimmt der Wert oder die Einheit noch nicht.`);
+      return;
+    }
+
+    item.classList.add('correct');
+  });
+
+  // Prüfe, ob alle Soll-Größen gefunden wurden
+  if (usedExpected.size < expectedList.length) {
+    allCorrect = false;
+    const missing = expectedList.filter((_, i) => !usedExpected.has(i));
+    if (missing.length > 0) {
+      issues.push(`Es fehlen noch ${missing.length} Größe(n).`);
+    }
+  }
+
+  if (allCorrect) {
+    feedback.className = 'step-feedback show correct';
+    feedback.innerHTML = '✓ Richtig! Alle Größen sind korrekt erfasst.';
+    setTimeout(() => {
+      state.currentStep++;
+      saveState();
+      if (state.currentStep >= task.steps.length) {
+        completeTask();
+      } else {
+        renderStep(task);
+      }
+    }, 900);
+  } else {
+    feedback.className = 'step-feedback show incorrect';
+    feedback.innerHTML = '✗ ' + (issues[0] || 'Es gibt noch Fehler. Prüfe deine Eingaben.');
+  }
+}
+
+function parseGivenEntry(raw) {
+  // Parst Eingaben wie "N = 100", "B=0,3 T", "ΔA = 0,01 m²"
+  if (!raw) return { symbol: '', value: '' };
+  const eqIdx = raw.indexOf('=');
+  if (eqIdx === -1) {
+    // Kein = drin: kein gültiger Eintrag
+    return { symbol: '', value: '' };
+  }
+  return {
+    symbol: raw.substring(0, eqIdx).trim(),
+    value: raw.substring(eqIdx + 1).trim()
+  };
+}
+
+function symbolsMatch(userSym, expectedSym) {
+  // Normalisierung: Whitespace weg, Kleinbuchstaben, Subskripte vereinheitlichen
+  const norm = s => s.toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/_/g, '')
+    .replace(/\{/g, '')
+    .replace(/\}/g, '')
+    .replace(/₀/g, '0')
+    .replace(/₁/g, '1')
+    .replace(/₂/g, '2')
+    .replace(/u_ind/g, 'uind')
+    .replace(/uind/g, 'uind');
+  const u = norm(userSym);
+  const e = norm(expectedSym);
+  return u === e;
+}
+
+function validateGivenValue(input, given) {
+  if (!input) return false;
+  const expected = given.expected;
+  const unit = given.unit;
+
+  // Werte normalisieren
+  const normInput = input.toLowerCase().replace(/,/g, '.').replace(/\s+/g, '');
+  const expNum = parseFloat(expected.replace(',', '.'));
+
+  // Versuche, eine Zahl im Input zu finden
+  const numMatch = normInput.match(/-?\d+(?:\.\d+)?/);
+  if (!numMatch) return false;
+  const inputNum = parseFloat(numMatch[0]);
+
+  const tolerance = Math.abs(expNum) * 0.001 || 0.001;
+  const numberOK = Math.abs(inputNum - expNum) <= tolerance;
+
+  if (!numberOK) return false;
+
+  // Einheit prüfen, falls erforderlich
+  if (unit) {
+    const unitNormalized = unit.toLowerCase().replace(/²/g, '2').replace(/³/g, '3');
+    const inputUnit = normInput.replace(/-?\d+(?:\.\d+)?/, '').replace(/²/g, '2').replace(/³/g, '3');
+    if (!inputUnit.includes(unitNormalized)) return false;
+  }
+
+  return true;
+}
+
+function updatePreview(idx) {
+  const input = document.getElementById('step-input-' + idx);
+  const preview = document.getElementById('preview-' + idx);
+  const content = document.getElementById('preview-content-' + idx);
+  if (!input || !preview || !content) return;
+
+  const value = input.value.trim();
+  if (!value) {
+    preview.classList.remove('show');
+    return;
+  }
+
+  // Wandle (...)/(...) und einfache a/b Muster in MathJax-Brüche um
+  const mathStr = textToMath(value);
+  content.innerHTML = `\\(${mathStr}\\)`;
+  preview.classList.add('show');
+
+  if (window.MathJax) {
+    MathJax.typesetClear([content]);
+    MathJax.typesetPromise([content]).catch(() => {});
+  }
+}
+
+function textToMath(text) {
+  // Schritt 1: Klammer-Brüche umwandeln: (a)/(b) -> \frac{a}{b}
+  let result = text;
+
+  // Sucht nach (...)/(... ) Muster, auch mehrfach
+  // Wir parsen das von links nach rechts
+  let changed = true;
+  let safety = 0;
+  while (changed && safety < 10) {
+    changed = false;
+    safety++;
+    // Finde das erste "(..)/(..)"-Muster
+    const match = result.match(/\(([^()]*)\)\/\(([^()]*)\)/);
+    if (match) {
+      result = result.replace(match[0], `\\frac{${match[1]}}{${match[2]}}`);
+      changed = true;
+    }
+  }
+
+  // Schritt 2: Einfache Token-Brüche (z.B. ΔA/Δt, N/l) — nur wenn keine Klammern dabei sind
+  // Muster: Wortzeichen + Subskript optional + / + Wortzeichen
+  // Wir erkennen einfache "wort/wort" oder "ΔX/ΔY"
+  result = result.replace(/(Δ?[A-Za-z_][A-Za-z0-9_]*(?:_\{[^}]+\})?)\s*\/\s*(Δ?[A-Za-z_][A-Za-z0-9_]*(?:_\{[^}]+\})?)/g,
+    (m, a, b) => `\\frac{${a}}{${b}}`);
+
+  // Schritt 3: Subscripts: U_ind -> U_{\text{ind}}, N_2 -> N_2
+  result = result.replace(/U_ind/g, 'U_{\\text{ind}}');
+  result = result.replace(/U_2/g, 'U_{2}');
+  result = result.replace(/U_1/g, 'U_{1}');
+  result = result.replace(/N_2/g, 'N_{2}');
+  result = result.replace(/N_1/g, 'N_{1}');
+  result = result.replace(/B_1/g, 'B_{1}');
+  result = result.replace(/B_2/g, 'B_{2}');
+
+  // Schritt 4: Δ-Symbole und ·
+  result = result.replace(/·/g, ' \\cdot ');
+
+  // Schritt 5: Hochzahlen (² → ^2)
+  result = result.replace(/²/g, '^{2}');
+  result = result.replace(/³/g, '^{3}');
+
+  // Schritt 6: Einheiten kursiv markieren (heuristisch nicht nötig, MathJax handhabt das)
+  // Stattdessen: Komma als Dezimaltrennzeichen visuell richtig (in TeX als Komma)
+
+  return result;
+}
+
+function renderHints(task) {
+  const list = document.getElementById('hints-list');
+  if (!task.hints || task.hints.length === 0) {
+    list.parentElement.style.display = 'none';
+    return;
+  }
+  let html = '';
+  task.hints.forEach((hint, idx) => {
+    const isRevealed = state.hintsRevealed.includes(idx);
+    html += `
+      <div class="hint-item ${isRevealed ? 'open' : ''}" id="hint-${idx}">
+        <button class="hint-trigger" onclick="toggleHint(${idx})">
+          <span><span class="hint-num">Hilfe ${idx + 1}</span></span>
+          <span>${isRevealed ? '−' : '+'}</span>
+        </button>
+        <div class="hint-content">${hint.text}</div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+  if (window.MathJax) MathJax.typesetPromise([list]);
+}
+
+function toggleHint(idx) {
+  if (!state.hintsRevealed.includes(idx)) {
+    state.hintsRevealed.push(idx);
+    saveState();
+  }
+  const item = document.getElementById('hint-' + idx);
+  item.classList.toggle('open');
+  const trigger = item.querySelector('.hint-trigger > span:last-child');
+  trigger.textContent = item.classList.contains('open') ? '−' : '+';
+
+  // Help-Banner anzeigen, wenn alle 3 Hilfen aufgerufen wurden
+  if (state.hintsRevealed.length >= 3) {
+    document.getElementById('help-banner').style.display = 'flex';
+  }
+}
+
+// ============================================================
+// SCHRITT PRÜFEN
+// ============================================================
+function checkStep(stepIdx) {
+  const task = tasks[state.currentTask];
+  const step = task.steps[stepIdx];
+  const input = document.getElementById('step-input-' + stepIdx);
+  const value = input.value.trim();
+  const feedback = document.getElementById('step-feedback-' + stepIdx);
+
+  const result = validateStep(step, value);
+
+  if (result.correct) {
+    input.classList.remove('incorrect');
+    input.classList.add('correct');
+    feedback.className = 'step-feedback show correct';
+    feedback.innerHTML = '✓ Richtig! ' + (result.note || '');
+    setTimeout(() => {
+      state.currentStep++;
+      saveState();
+      if (state.currentStep >= task.steps.length) {
+        completeTask();
+      } else {
+        renderStep(task);
+        if (window.MathJax) MathJax.typesetPromise([document.getElementById('steps-container')]);
+      }
+    }, 800);
+  } else {
+    input.classList.add('incorrect');
+    feedback.className = 'step-feedback show incorrect';
+    feedback.innerHTML = '✗ ' + (result.note || 'Das ist noch nicht ganz richtig. Versuche es noch einmal.');
+  }
+}
+
+function normalizeText(s) {
+  // (a)/(b) -> a/b
+  let normalized = s;
+  let safety = 0;
+  while (safety < 10) {
+    safety++;
+    const before = normalized;
+    normalized = normalized.replace(/\(([^()]*)\)\/\(([^()]*)\)/, '$1/$2');
+    if (before === normalized) break;
+  }
+  // Auch einfache "(x)/y" und "x/(y)"
+  normalized = normalized.replace(/\(([^()]*)\)\/([^\s()]+)/g, '$1/$2');
+  normalized = normalized.replace(/([^\s()/]+)\/\(([^()]*)\)/g, '$1/$2');
+
+  return normalized.toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/,/g, '.')
+    .replace(/×/g, '*')
+    .replace(/·/g, '*');
+}
+
+function validateStep(step, value) {
+  if (!value) return { correct: false, note: 'Bitte gib eine Antwort ein.' };
+
+  const v = normalizeText(value);
+
+  // Result-Check mit Toleranz
+  if (step.check === 'result') {
+    const num = parseFloat(value.replace(',', '.').replace(/[^0-9.eE\-+]/g, ''));
+    if (isNaN(num)) return { correct: false, note: 'Bitte gib eine Zahl mit Einheit ein.' };
+    const tol = step.tolerance || Math.abs(step.expected) * 0.02 || 0.01;
+    const matchUnit = step.unit ? value.toLowerCase().includes(step.unit.toLowerCase().replace('²', '')) : true;
+    if (Math.abs(num - step.expected) <= tol) {
+      if (step.unit && !matchUnit) return { correct: false, note: `Die Zahl stimmt, aber die Einheit fehlt. Sie sollte ${step.unit} sein.` };
+      return { correct: true };
+    }
+    return { correct: false, note: 'Die Zahl stimmt noch nicht. Prüfe deine Rechnung.' };
+  }
+
+  // Gesucht-Checks
+  if (step.check === 'gesucht') return v.includes('u_ind') || v.includes('uind') || v === 'u' ? { correct: true } : { correct: false };
+  if (step.check === 'gesucht_dt') return v.includes('δt') || v.includes('deltat') || v.includes('dt') ? { correct: true } : { correct: false };
+  if (step.check === 'gesucht_n') return v === 'n' || v.includes('windungszahl') ? { correct: true } : { correct: false };
+  if (step.check === 'gesucht_n2') return v.includes('n_2') || v.includes('n2') ? { correct: true } : { correct: false };
+  if (step.check === 'gesucht_u2') return v.includes('u_2') || v.includes('u2') ? { correct: true } : { correct: false };
+
+  // List-Checks (flexible)
+  if (step.check && step.check.startsWith('list')) {
+    return checkListAnswer(step, value);
+  }
+
+  // Formel-Checks
+  if (step.check && step.check.startsWith('formula')) {
+    return checkFormula(step, value);
+  }
+
+  // Einsetzen-Checks (sehr tolerant: prüft ob alle Zahlen vorkommen)
+  if (step.check && step.check.startsWith('einsetzen')) {
+    return checkEinsetzen(step, value);
+  }
+
+  // Umrechnung
+  if (step.check && step.check.startsWith('umrechnung')) {
+    return checkUmrechnung(step, value);
+  }
+
+  // Default: einfache Textgleichheit (locker)
+  if (normalizeText(formatAnswer(step.answer)) === v) return { correct: true };
+  return { correct: false };
+}
+
+function checkListAnswer(step, value) {
+  // Prüft, ob alle Hauptgrößen erwähnt sind
+  const v = value.toLowerCase().replace(/,/g, '.').replace(/\s/g, '');
+  const required = {
+    'list': ['n=100', 'b=0.3', '0.01', '0.2'],
+    'list_b2': ['n=200', 'a=0.008', '0.4', '0.2'],
+    'list_r22': ['0.002', '4', '0.8', '120'],
+    'list_31': ['n', '400', '0.001', '0.2', '10'],
+    'list_32': ['230', '0.5', '6', '200']
+  };
+  const reqs = required[step.check];
+  if (!reqs) return { correct: false };
+  const missing = reqs.filter(r => !v.includes(r));
+  if (missing.length === 0) return { correct: true };
+  return { correct: false, note: `Es fehlen noch Werte. Trage alle gegebenen Größen mit ihren Werten ein.` };
+}
+
+function checkFormula(step, value) {
+  const v = normalizeText(value);
+  const patterns = {
+    'formula1': [['u_ind=n*b*Δa/Δt', 'uind=n*b*Δa/Δt', 'u=n*b*Δa/Δt', 'u_ind=n*b*da/dt']],
+    'formula2': [['Δt=n*b*Δa/u_ind', 'Δt=n*b*Δa/uind', 'dt=n*b*da/u_ind', 'dt=n*b*da/uind']],
+    'formula3': [['u_ind=n*Δb/Δt*a', 'uind=n*Δb/Δt*a', 'u_ind=n*a*Δb/Δt', 'uind=n*a*Δb/Δt', 'u=n*Δb/Δt*a']],
+    'formula4': [['n=u_ind*Δt/(Δb*a)', 'n=uind*Δt/(Δb*a)', 'n=u_ind*Δt/Δb/a', 'n=(u_ind*Δt)/(Δb*a)']],
+    'formula5': [['u_2=n_2*Δb/Δt*a', 'u2=n2*Δb/Δt*a', 'u_2=n_2*a*Δb/Δt']],
+    'formula6': [['n_2=u_2*Δt/(Δb*a)', 'n2=u2*Δt/(Δb*a)', 'n_2=u_2*Δt/Δb/a']]
+  };
+  const valid = patterns[step.check];
+  if (!valid) return { correct: false };
+  // Tolerantere Prüfung: Kernkomponenten müssen vorkommen
+  // Wir suchen nach Strukturmustern
+  for (const variants of valid) {
+    for (const variant of variants) {
+      const normVariant = variant.replace(/\s/g, '');
+      // Prüfe wesentliche Komponenten
+      if (variantMatches(v, normVariant)) return { correct: true };
+    }
+  }
+  return { correct: false, note: 'Die Formel ist noch nicht korrekt umgestellt.' };
+}
+
+function variantMatches(input, variant) {
+  // Vergleicht die wesentlichen Komponenten (Größen vor und nach dem =)
+  const sides = variant.split('=');
+  const inputSides = input.split('=');
+  if (sides.length !== 2 || inputSides.length !== 2) return false;
+  const leftMatch = normalizeFormulaSide(sides[0]) === normalizeFormulaSide(inputSides[0]);
+  // Rechte Seite: prüfe, ob alle Faktoren vorkommen
+  const rightVariant = normalizeFormulaSide(sides[1]);
+  const rightInput = normalizeFormulaSide(inputSides[1]);
+  // Sehr tolerant: gleiche Multimenge an Symbolen
+  return leftMatch && containsSameComponents(rightVariant, rightInput);
+}
+
+function normalizeFormulaSide(s) {
+  return s.toLowerCase().replace(/\s/g, '').replace(/_/g, '').replace(/\*/g, '');
+}
+
+function containsSameComponents(a, b) {
+  // Sehr lockere Prüfung: extrahiert die wesentlichen Größen (n, b, a, u, Δa, Δt, Δb, uind)
+  const extract = s => {
+    const tokens = [];
+    if (s.includes('n')) tokens.push('n');
+    if (s.includes('Δa') || s.includes('da')) tokens.push('Δa');
+    if (s.includes('Δb') || s.includes('db')) tokens.push('Δb');
+    if (s.includes('Δt') || s.includes('dt')) tokens.push('Δt');
+    // a allein (nicht in Δa)
+    const aOnly = s.replace(/Δa/g, '').replace(/da/g, '');
+    if (aOnly.includes('a')) tokens.push('a');
+    // b allein (nicht in Δb)
+    const bOnly = s.replace(/Δb/g, '').replace(/db/g, '');
+    if (bOnly.includes('b')) tokens.push('b');
+    if (s.includes('u')) tokens.push('u');
+    return tokens.sort().join(',');
+  };
+  return extract(a) === extract(b);
+}
+
+function checkEinsetzen(step, value) {
+  const v = value.toLowerCase().replace(/,/g, '.').replace(/\s/g, '');
+  const required = {
+    'einsetzen1': ['100', '0.3', '0.01', '0.2'],
+    'einsetzen2': ['200', '1.5', '0.025', '230'],
+    'einsetzen3': ['200', '0.4', '0.2', '0.008'],
+    'einsetzen4': ['0.12', '0.004', '0.002', '8'],
+    'einsetzen5': ['400', '0.2', '0.01', '0.001'],
+    'einsetzen6': ['230', '0.006', '0.5', '0.02']
+  };
+  const reqs = required[step.check];
+  if (!reqs) return { correct: false };
+  const missing = reqs.filter(r => !v.includes(r));
+  if (missing.length === 0) return { correct: true };
+  return { correct: false, note: 'Setze alle Werte mit Einheiten korrekt in die Formel ein.' };
+}
+
+function checkUmrechnung(step, value) {
+  const v = value.toLowerCase().replace(/,/g, '.').replace(/\s/g, '');
+  if (step.check === 'umrechnung1') {
+    return v.includes('0.025') ? { correct: true } : { correct: false, note: '$1 \\text{ m}^2 = 10\\,000 \\text{ cm}^2$. Rechne sorgfältig um.' };
+  }
+  if (step.check === 'umrechnung2') {
+    const hasA = v.includes('8') && (v.includes('10') || v.includes('e-5') || v.includes('0.00008'));
+    const hasDt = v.includes('0.004');
+    const hasU = v.includes('0.12');
+    if (hasA && hasDt && hasU) return { correct: true };
+    return { correct: false, note: 'Rechne alle Werte sorgfältig um: cm² in m², ms in s, mV in V.' };
+  }
+  if (step.check === 'umrechnung3') {
+    return v.includes('0.01') ? { correct: true } : { correct: false, note: '$1 \\text{ s} = 1000 \\text{ ms}$.' };
+  }
+  if (step.check === 'umrechnung4') {
+    const hasA = v.includes('0.02');
+    const hasDt = v.includes('0.006');
+    if (hasA && hasDt) return { correct: true };
+    return { correct: false, note: 'Rechne sowohl A als auch Δt sorgfältig um.' };
+  }
+  return { correct: false };
+}
+
+// ============================================================
+// ARGUMENTATIONSAUFGABE
+// ============================================================
+function renderArgTask(task, container) {
+  const areaLabel = areaInfo[task.area].title;
+  container.innerHTML = `
+    <div class="task-header">
+      <div class="task-title"><strong>${areaLabel}</strong> · ${task.title}</div>
+      <button class="btn-ghost" onclick="exitTask()">Zurück</button>
+    </div>
+    <div class="task-context">${task.context}</div>
+    <div class="task-question">${task.question}</div>
+    <div id="arg-steps-container"></div>
+    ${task.hints && task.hints.length > 0 ? `
+      <div class="hints-container">
+        <div class="hints-label">Hilfen</div>
+        <div class="hints-list" id="arg-hints-list"></div>
+      </div>
+      <div class="help-banner" id="help-banner" style="display: none;">
+        <strong>Brauchst du Unterstützung?</strong> Drehe deine rote Karte um, damit die Lehrperson zu dir kommt.
+      </div>
+    ` : ''}
+    <div id="arg-final-container"></div>
+  `;
+  renderArgSteps(task);
+  if (task.hints && task.hints.length > 0) renderArgHints(task);
+}
+
+function renderArgSteps(task) {
+  const container = document.getElementById('arg-steps-container');
+  if (!state.argStepsConfirmed) state.argStepsConfirmed = [];
+
+  let html = '';
+  task.argSteps.forEach((step, idx) => {
+    const done = state.argStepsDone.includes(idx);
+    const confirmed = state.argStepsConfirmed.includes(idx);
+    // Aktueller Schritt: entweder der erste (idx 0), oder der nach einem bestätigten Schritt
+    const isCurrent = !done && (idx === 0 || state.argStepsConfirmed.includes(idx - 1));
+    const locked = !done && !isCurrent;
+
+    html += `
+      <div class="arg-step ${done ? 'done' : ''} ${locked ? 'locked' : ''}" id="arg-step-${idx}">
+        <div class="arg-step-header">
+          <span class="arg-step-num">${confirmed ? '✓' : (idx + 1)}</span>
+          <div class="arg-step-question">${step.question}</div>
+        </div>
+        <textarea class="arg-textarea" id="arg-textarea-${idx}" ${done ? 'disabled' : ''} placeholder="Schreibe deine Antwort..."></textarea>
+        ${!done && isCurrent ? `<button class="btn" onclick="submitArgStep(${idx})">Antwort einreichen</button>` : ''}
+        <div class="step-feedback" id="arg-feedback-${idx}"></div>
+        <div class="arg-musterloesung ${done ? 'show' : ''}" id="arg-muster-${idx}">
+          <div class="arg-musterloesung-label">Musterantwort zum Vergleich</div>
+          <div class="arg-musterloesung-text">${step.muster}</div>
+        </div>
+        ${done ? `
+          <div class="arg-confirm" id="arg-confirm-${idx}">
+            <label>
+              <input type="checkbox" onchange="confirmArgStep(${idx}, this.checked)" ${confirmed ? 'checked disabled' : ''}>
+              Meine Antwort enthält die wesentlichen Punkte der Musterantwort.
+            </label>
+          </div>
+          ${!confirmed ? `<div class="step-feedback show" style="background: var(--accent-bg); color: var(--text-secondary); border: 1px solid var(--accent-dim); margin-top: 10px;">Bestätige deine Selbstreflexion, um zum nächsten Teilschritt zu gelangen.</div>` : ''}
+        ` : ''}
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+
+  if (window.MathJax) MathJax.typesetPromise([container]);
+
+  // Wenn alle argSteps fertig UND bestätigt, Selbsteinschätzung anzeigen
+  const allDone = state.argStepsDone.length === task.argSteps.length;
+  const allConfirmed = state.argStepsConfirmed.length === task.argSteps.length;
+  if (allDone && allConfirmed) {
+    showSelfEvaluation(task);
+  }
+}
+
+function renderArgHints(task) {
+  const list = document.getElementById('arg-hints-list');
+  let html = '';
+  task.hints.forEach((hint, idx) => {
+    // Verstecken, wenn der zugeordnete Step gelöst ist
+    if (state.argStepsDone.includes(hint.stepIndex)) return;
+    const isRevealed = state.hintsRevealed.includes(idx);
+    html += `
+      <div class="hint-item ${isRevealed ? 'open' : ''}" id="arg-hint-${idx}">
+        <button class="hint-trigger" onclick="toggleArgHint(${idx})">
+          <span><span class="hint-num">Hilfe ${idx + 1}</span><span style="color: var(--text-muted); font-size: 12px;">  ·  zu Teilschritt ${hint.stepIndex + 1}</span></span>
+          <span>${isRevealed ? '−' : '+'}</span>
+        </button>
+        <div class="hint-content">${hint.text}</div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+  if (window.MathJax) MathJax.typesetPromise([list]);
+}
+
+function toggleArgHint(idx) {
+  if (!state.hintsRevealed.includes(idx)) {
+    state.hintsRevealed.push(idx);
+    saveState();
+  }
+  const item = document.getElementById('arg-hint-' + idx);
+  item.classList.toggle('open');
+  const trigger = item.querySelector('.hint-trigger > span:last-child');
+  trigger.textContent = item.classList.contains('open') ? '−' : '+';
+
+  if (state.hintsRevealed.length >= 2) {
+    const banner = document.getElementById('help-banner');
+    if (banner) banner.style.display = 'flex';
+  }
+}
+
+function submitArgStep(idx) {
+  const textarea = document.getElementById('arg-textarea-' + idx);
+  const value = textarea.value.trim();
+  const feedback = document.getElementById('arg-feedback-' + idx);
+
+  const task = tasks[state.currentTask];
+  // Vertiefungsaufgaben verlangen eine längere Antwort, da sie eine ganze Kette enthalten
+  const minLength = task.isVertief ? 120 : 30;
+
+  if (!value || value.length < minLength) {
+    feedback.className = 'step-feedback show incorrect';
+    feedback.innerHTML = task.isVertief
+      ? '✗ Deine Antwort ist noch zu kurz. Formuliere die vollständige Argumentationskette in mehreren Sätzen.'
+      : '✗ Deine Antwort ist noch zu kurz. Formuliere eine vollständige Argumentation.';
+    return;
+  }
+
+  // Stichwortprüfung
+  const step = task.argSteps[idx];
+  if (step.keywords && step.keywords.length > 0) {
+    const valueLower = value.toLowerCase();
+    const missingGroups = step.keywords.filter(group =>
+      !group.some(kw => valueLower.includes(kw))
+    );
+    if (missingGroups.length > 0) {
+      feedback.className = 'step-feedback show incorrect';
+      const fehlAnzahl = missingGroups.length;
+      feedback.innerHTML = `✗ Deine Antwort berührt noch nicht alle zentralen Aspekte (${fehlAnzahl} fehlt${fehlAnzahl > 1 ? 'en' : ''}). Welche physikalischen Konzepte sind hier wichtig?`;
+      return;
+    }
+  }
+
+  // Antwort akzeptiert: Musterantwort zeigen
+  state.argStepsDone.push(idx);
+  saveState();
+  renderArgSteps(task);
+  if (task.hints) renderArgHints(task);
+}
+
+function confirmArgStep(idx, checked) {
+  if (checked) {
+    if (!state.argStepsConfirmed) state.argStepsConfirmed = [];
+    if (!state.argStepsConfirmed.includes(idx)) {
+      state.argStepsConfirmed.push(idx);
+      saveState();
+    }
+    // Nächsten Step freischalten durch Re-Render
+    const task = tasks[state.currentTask];
+    renderArgSteps(task);
+    if (task.hints) renderArgHints(task);
+  }
+}
+
+function showSelfEvaluation(task) {
+  if (task.isVertief) {
+    // Vertiefungsaufgabe abschließen
+    state.vertiefCompleted[task.area] = true;
+    saveState();
+    // Container leeren
+    const finalContainer = document.getElementById('arg-final-container');
+    if (finalContainer) {
+      finalContainer.innerHTML = `
+        <div class="self-eval">
+          <h3>Vertiefungsaufgabe abgeschlossen.</h3>
+          <button class="btn" onclick="completeArgTask()">Weiter</button>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  const finalContainer = document.getElementById('arg-final-container');
+  finalContainer.innerHTML = `
+    <div class="self-eval">
+      <h3>Selbsteinschätzung: Wie sicher fühlst du dich, eine ähnliche Argumentationskette selbstständig aufzubauen?</h3>
+      <div class="self-eval-options">
+        <button class="self-eval-btn" onclick="selectSelfEval('sicher')">Sicher</button>
+        <button class="self-eval-btn" onclick="selectSelfEval('teilweise')">Teilweise sicher</button>
+        <button class="self-eval-btn" onclick="selectSelfEval('unsicher')">Unsicher</button>
+      </div>
+      <div id="self-eval-result" style="margin-top: 16px;"></div>
+    </div>
+  `;
+}
+
+function selectSelfEval(level) {
+  document.querySelectorAll('.self-eval-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+
+  const task = tasks[state.currentTask];
+  const result = document.getElementById('self-eval-result');
+
+  if (level === 'unsicher') {
+    state.vertiefRecommended[task.area] = true;
+    saveState();
+    result.innerHTML = `
+      <div class="info-box" style="background: var(--warning-bg); border-color: var(--warning); color: var(--text-primary); margin: 16px 0;">
+        Wir empfehlen dir, die Vertiefungsaufgabe zu bearbeiten, um die Argumentation noch einmal mit einem anderen Kontext zu üben.
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 12px;">
+        <button class="btn" onclick="startVertief()">Vertiefungsaufgabe starten</button>
+        <button class="btn-secondary" onclick="completeArgTask()">Überspringen und weitermachen</button>
+      </div>
+    `;
+  } else {
+    result.innerHTML = `
+      <div style="margin-top: 12px;">
+        <button class="btn" onclick="completeArgTask()">Weiter</button>
+      </div>
+    `;
+  }
+}
+
+function startVertief() {
+  const area = state.currentArea;
+  const vertiefId = area + '-vertief';
+  loadTask(vertiefId);
+}
+
+function completeArgTask() {
+  completeTask();
+}
+
+// ============================================================
+// AUFGABE ABSCHLIESSEN
+// ============================================================
+function completeTask() {
+  const task = tasks[state.currentTask];
+
+  if (task.isVertief) {
+    // Nach Vertiefung zurück zur Hauptaufgabe-Flow
+    // currentStep im Progress war bereits auf 'arg' (Index 1) gesetzt
+    // Wir bewegen uns nun nach 'r2'
+    const area = state.currentArea;
+    const progress = state.areaProgress[area];
+    // Argumentation als done markieren (falls noch nicht)
+    const argId = area + '-arg';
+    if (!progress.completed.includes(argId)) {
+      progress.completed.push(argId);
+      progress.current++;
+    }
+    saveState();
+    showToast('Vertiefung abgeschlossen', 'Weiter mit Rechenaufgabe 2.');
+    setTimeout(() => {
+      const nextTaskId = taskOrder[area][progress.current];
+      if (nextTaskId) loadTask(nextTaskId);
+      else finishArea();
+    }, 1200);
+    return;
+  }
+
+  const area = state.currentArea;
+  const progress = state.areaProgress[area];
+
+  if (!progress.completed.includes(state.currentTask)) {
+    progress.completed.push(state.currentTask);
+    progress.current++;
+  }
+
+  saveState();
+
+  showToast('Aufgabe abgeschlossen', task.title + ' erfolgreich gelöst.');
+
+  setTimeout(() => {
+    if (progress.current >= taskOrder[area].length) {
+      finishArea();
+    } else {
+      const nextTaskId = taskOrder[area][progress.current];
+      loadTask(nextTaskId);
+    }
+  }, 1500);
+}
+
+function finishArea() {
+  const area = state.currentArea;
+  state.lockedArea = null;
+  saveState();
+  showToast('Bereich abgeschlossen', areaInfo[area].title + ' vollständig bearbeitet.');
+  setTimeout(() => {
+    showHome();
+  }, 1500);
+}
+
+function exitTask() {
+  // Bereich nur verlassen, wenn Aufgabe noch nicht begonnen wurde
+  // Sonst: Warnung
+  if (state.currentStep > 0 || state.argStepsDone.length > 0) {
+    if (!confirm('Wenn du jetzt zurückgehst, gehen deine bisherigen Antworten in dieser Aufgabe verloren. Wirklich zurück?')) return;
+  }
+  state.lockedArea = null;
+  state.currentStep = 0;
+  state.argStepsDone = [];
+  state.argStepsConfirmed = [];
+  state.hintsRevealed = [];
+  saveState();
+  showHome();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(title, message) {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-message').textContent = message;
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+if (state.currentDiagnosticIndex > 0 && state.currentDiagnosticIndex < diagnosticQuestions.length) {
+  // Diagnose wurde unterbrochen: neu starten
+  state.currentDiagnosticIndex = 0;
+  state.diagnosticResults = { 1: [], 2: [], 3: [] };
+}
+
+// Wenn Diagnose schon gemacht und Bereich gewählt war, zurück zur Home
+if (state.diagnosticResults && (state.diagnosticResults[1].length > 0 || state.diagnosticResults[2].length > 0 || state.diagnosticResults[3].length > 0)) {
+  showHome();
+}
+</script>
+
+</body>
+</html>
